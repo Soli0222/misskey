@@ -157,6 +157,8 @@ export interface Locale {
     "flagAsBotDescription": string;
     "flagAsCat": string;
     "flagAsCatDescription": string;
+    "flagAsSheep": string;
+    "flagAsSheepDescription": string;
     "flagShowTimelineReplies": string;
     "flagShowTimelineRepliesDescription": string;
     "autoAcceptFollowed": string;
@@ -1252,6 +1254,11 @@ export interface Locale {
                 "description": string;
             };
             "_markedAsCat": {
+                "title": string;
+                "description": string;
+                "flavor": string;
+            };
+            "_markedAsSheep": {
                 "title": string;
                 "description": string;
                 "flavor": string;
