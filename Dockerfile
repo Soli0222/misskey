@@ -1,6 +1,7 @@
 # syntax = docker/dockerfile:1.4
 
-ARG NODE_VERSION=20.3.1-bullseye
+ARG NODE_VERSION=20.4.0-bullseye
+# ARG NODE_VERSION=20.3.1-bullseyeで何故かコケる
 
 # build assets & compile TypeScript
 
