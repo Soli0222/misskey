@@ -686,6 +686,7 @@ export interface Locale {
     "unclip": string;
     "confirmToUnclipAlreadyClippedNote": string;
     "public": string;
+    "private": string;
     "i18nInfo": string;
     "manageAccessTokens": string;
     "accountInfo": string;
@@ -1864,6 +1865,10 @@ export interface Locale {
         "write:gallery": string;
         "read:gallery-likes": string;
         "write:gallery-likes": string;
+        "read:flash": string;
+        "write:flash": string;
+        "read:flash-likes": string;
+        "write:flash-likes": string;
     };
     "_auth": {
         "shareAccessTitle": string;

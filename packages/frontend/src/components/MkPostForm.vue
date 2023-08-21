@@ -164,33 +164,34 @@ SPDX-License-Identifier: AGPL-3.0-only
 	const hashtagsInputEl = $shallowRef<HTMLInputElement | null>(null);
 	const visibilityButton = $shallowRef<HTMLElement | null>(null);
 
-	let posting = $ref(false);
-	let posted = $ref(false);
-	let text = $ref(props.initialText ?? '');
-	let files = $ref(props.initialFiles ?? []);
-	let poll = $ref<{
-		choices: string[];
-		multiple: boolean;
-		expiresAt: string | null;
-		expiredAfter: string | null;
-	} | null>(null);
-	let useCw = $ref(false);
-	let showPreview = $ref(false);
-	let cw = $ref<string | null>(null);
-	let localOnly = $ref<boolean>(props.initialLocalOnly ?? defaultStore.state.rememberNoteVisibility ? defaultStore.state.localOnly : defaultStore.state.defaultNoteLocalOnly);
-	let visibility = $ref(props.initialVisibility ?? (defaultStore.state.rememberNoteVisibility ? defaultStore.state.visibility : defaultStore.state.defaultNoteVisibility) as typeof misskey.noteVisibilities[number]);
-	let visibleUsers = $ref([]);
-	if (props.initialVisibleUsers) {
-		props.initialVisibleUsers.forEach(pushVisibleUser);
-	}
-	let reactionAcceptance = $ref(defaultStore.state.reactionAcceptance);
-	let autocomplete = $ref(null);
-	let draghover = $ref(false);
-	let quoteId = $ref(null);
-	let hasNotSpecifiedMentions = $ref(false);
-	let recentHashtags = $ref(JSON.parse(miLocalStorage.getItem('hashtags') ?? '[]'));
-	let imeText = $ref('');
-	let showingOptions = $ref(false);
+let posting = $ref(false);
+let posted = $ref(false);
+let text = $ref(props.initialText ?? '');
+let files = $ref(props.initialFiles ?? []);
+let poll = $ref<{
+	choices: string[];
+	multiple: boolean;
+	expiresAt: string | null;
+	expiredAfter: string | null;
+} | null>(null);
+let useCw = $ref(false);
+let showPreview = $ref(defaultStore.state.showPreview);
+watch($$(showPreview), () => defaultStore.set('showPreview', showPreview));
+let cw = $ref<string | null>(null);
+let localOnly = $ref<boolean>(props.initialLocalOnly ?? defaultStore.state.rememberNoteVisibility ? defaultStore.state.localOnly : defaultStore.state.defaultNoteLocalOnly);
+let visibility = $ref(props.initialVisibility ?? (defaultStore.state.rememberNoteVisibility ? defaultStore.state.visibility : defaultStore.state.defaultNoteVisibility) as typeof misskey.noteVisibilities[number]);
+let visibleUsers = $ref([]);
+if (props.initialVisibleUsers) {
+	props.initialVisibleUsers.forEach(pushVisibleUser);
+}
+let reactionAcceptance = $ref(defaultStore.state.reactionAcceptance);
+let autocomplete = $ref(null);
+let draghover = $ref(false);
+let quoteId = $ref(null);
+let hasNotSpecifiedMentions = $ref(false);
+let recentHashtags = $ref(JSON.parse(miLocalStorage.getItem('hashtags') ?? '[]'));
+let imeText = $ref('');
+let showingOptions = $ref(false);
 
 	const draftKey = $computed((): string => {
 		let key = props.channel ? `channel:${props.channel.id}` : '';
