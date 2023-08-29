@@ -1637,6 +1637,7 @@ export interface Locale {
         "contributors": string;
         "allContributors": string;
         "source": string;
+        "sourceOriginal": string;
         "translation": string;
         "donate": string;
         "morePatrons": string;

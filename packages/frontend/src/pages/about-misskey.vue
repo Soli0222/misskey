@@ -29,9 +29,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 				<FormSection>
 					<div class="_formLinks">
-						<FormLink to="https://github.com/misskey-dev/misskey" external>
+						<FormLink to="https://github.com/Soli0222/misskey" external>
 							<template #icon><i class="ti ti-code"></i></template>
 							{{ i18n.ts._aboutMisskey.source }}
+							<template #suffix>GitHub</template>
+						</FormLink>
+						<FormLink to="https://github.com/misskey-dev/misskey" external>
+							<template #icon><i class="ti ti-code"></i></template>
+							{{ i18n.ts._aboutMisskey.sourceOriginal }}
 							<template #suffix>GitHub</template>
 						</FormLink>
 						<FormLink to="https://crowdin.com/project/misskey" external>
