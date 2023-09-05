@@ -48,6 +48,7 @@ export interface Locale {
     "unpin": string;
     "copyContent": string;
     "copyLink": string;
+    "copyLinkRenote": string;
     "delete": string;
     "deleteAndEdit": string;
     "deleteAndEditConfirm": string;
@@ -416,6 +417,7 @@ export interface Locale {
     "administrator": string;
     "token": string;
     "2fa": string;
+    "setupOf2fa": string;
     "totp": string;
     "totpDescription": string;
     "moderator": string;
@@ -659,6 +661,7 @@ export interface Locale {
     "sample": string;
     "abuseReports": string;
     "reportAbuse": string;
+    "reportAbuseRenote": string;
     "reportAbuseOf": string;
     "fillAbuseReportDescription": string;
     "abuseReported": string;
@@ -1814,9 +1817,10 @@ export interface Locale {
         "step1": string;
         "step2": string;
         "step2Click": string;
-        "step2Url": string;
+        "step2Uri": string;
         "step3Title": string;
         "step3": string;
+        "setupCompleted": string;
         "step4": string;
         "securityKeyNotSupported": string;
         "registerTOTPBeforeKey": string;
@@ -1832,6 +1836,11 @@ export interface Locale {
         "renewTOTPConfirm": string;
         "renewTOTPOk": string;
         "renewTOTPCancel": string;
+        "checkBackupCodesBeforeCloseThisWizard": string;
+        "backupCodes": string;
+        "backupCodesDescription": string;
+        "backupCodeUsedWarning": string;
+        "backupCodesExhaustedWarning": string;
     };
     "_permissions": {
         "read:account": string;
@@ -2166,6 +2175,8 @@ export interface Locale {
         "introduction2": string;
         "widgetsIntroduction": string;
         "useSimpleUiForNonRootPages": string;
+        "usedAsMinWidthWhenFlexible": string;
+        "flexible": string;
         "_columns": {
             "main": string;
             "widgets": string;

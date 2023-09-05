@@ -101,57 +101,56 @@ SPDX-License-Identifier: AGPL-3.0-only
 	</div>
 	</template>
 
-	<script lang="ts" setup>
-	import { inject, watch, nextTick, onMounted, defineAsyncComponent } from 'vue';
-	import * as mfm from 'mfm-js';
-	import * as misskey from 'misskey-js';
-	import insertTextAtCursor from 'insert-text-at-cursor';
-	import { toASCII } from 'punycode/';
-	import * as Acct from 'misskey-js/built/acct';
-	import MkNoteSimple from '@/components/MkNoteSimple.vue';
-	import MkNotePreview from '@/components/MkNotePreview.vue';
-	import XPostFormAttaches from '@/components/MkPostFormAttaches.vue';
-	import MkPollEditor from '@/components/MkPollEditor.vue';
-	import { host, url } from '@/config';
-	import { erase, unique } from '@/scripts/array';
-	import { extractMentions } from '@/scripts/extract-mentions';
-	import { formatTimeString } from '@/scripts/format-time-string';
-	import { Autocomplete } from '@/scripts/autocomplete';
-	import * as os from '@/os';
-	import { selectFiles } from '@/scripts/select-file';
-	import { defaultStore, notePostInterruptors, postFormActions } from '@/store';
-	import MkInfo from '@/components/MkInfo.vue';
-	import { i18n } from '@/i18n';
-	import { instance } from '@/instance';
-	import { $i, notesCount, incNotesCount, getAccounts, openAccountMenu as openAccountMenu_ } from '@/account';
-	import { uploadFile } from '@/scripts/upload';
-	import { deepClone } from '@/scripts/clone';
-	import MkRippleEffect from '@/components/MkRippleEffect.vue';
-	import { miLocalStorage } from '@/local-storage';
-	import { claimAchievement } from '@/scripts/achievements';
+<script lang="ts" setup>
+import { inject, watch, nextTick, onMounted, defineAsyncComponent } from 'vue';
+import * as mfm from 'mfm-js';
+import * as Misskey from 'misskey-js';
+import insertTextAtCursor from 'insert-text-at-cursor';
+import { toASCII } from 'punycode/';
+import MkNoteSimple from '@/components/MkNoteSimple.vue';
+import MkNotePreview from '@/components/MkNotePreview.vue';
+import XPostFormAttaches from '@/components/MkPostFormAttaches.vue';
+import MkPollEditor from '@/components/MkPollEditor.vue';
+import { host, url } from '@/config';
+import { erase, unique } from '@/scripts/array';
+import { extractMentions } from '@/scripts/extract-mentions';
+import { formatTimeString } from '@/scripts/format-time-string';
+import { Autocomplete } from '@/scripts/autocomplete';
+import * as os from '@/os';
+import { selectFiles } from '@/scripts/select-file';
+import { defaultStore, notePostInterruptors, postFormActions } from '@/store';
+import MkInfo from '@/components/MkInfo.vue';
+import { i18n } from '@/i18n';
+import { instance } from '@/instance';
+import { $i, notesCount, incNotesCount, getAccounts, openAccountMenu as openAccountMenu_ } from '@/account';
+import { uploadFile } from '@/scripts/upload';
+import { deepClone } from '@/scripts/clone';
+import MkRippleEffect from '@/components/MkRippleEffect.vue';
+import { miLocalStorage } from '@/local-storage';
+import { claimAchievement } from '@/scripts/achievements';
 
 	const modal = inject('modal');
 
-	const props = withDefaults(defineProps<{
-		reply?: misskey.entities.Note;
-		renote?: misskey.entities.Note;
-		channel?: misskey.entities.Channel; // TODO
-		mention?: misskey.entities.User;
-		specified?: misskey.entities.User;
-		initialText?: string;
-		initialVisibility?: (typeof misskey.noteVisibilities)[number];
-		initialFiles?: misskey.entities.DriveFile[];
-		initialLocalOnly?: boolean;
-		initialVisibleUsers?: misskey.entities.User[];
-		initialNote?: misskey.entities.Note;
-		instant?: boolean;
-		fixed?: boolean;
-		autofocus?: boolean;
-		freezeAfterPosted?: boolean;
-	}>(), {
-		initialVisibleUsers: () => [],
-		autofocus: true,
-	});
+const props = withDefaults(defineProps<{
+	reply?: Misskey.entities.Note;
+	renote?: Misskey.entities.Note;
+	channel?: Misskey.entities.Channel; // TODO
+	mention?: Misskey.entities.User;
+	specified?: Misskey.entities.User;
+	initialText?: string;
+	initialVisibility?: (typeof Misskey.noteVisibilities)[number];
+	initialFiles?: Misskey.entities.DriveFile[];
+	initialLocalOnly?: boolean;
+	initialVisibleUsers?: Misskey.entities.User[];
+	initialNote?: Misskey.entities.Note;
+	instant?: boolean;
+	fixed?: boolean;
+	autofocus?: boolean;
+	freezeAfterPosted?: boolean;
+}>(), {
+	initialVisibleUsers: () => [],
+	autofocus: true,
+});
 
 	const emit = defineEmits<{
 		(ev: 'posted'): void;
@@ -179,7 +178,7 @@ let showPreview = $ref(defaultStore.state.showPreview);
 watch($$(showPreview), () => defaultStore.set('showPreview', showPreview));
 let cw = $ref<string | null>(null);
 let localOnly = $ref<boolean>(props.initialLocalOnly ?? defaultStore.state.rememberNoteVisibility ? defaultStore.state.localOnly : defaultStore.state.defaultNoteLocalOnly);
-let visibility = $ref(props.initialVisibility ?? (defaultStore.state.rememberNoteVisibility ? defaultStore.state.visibility : defaultStore.state.defaultNoteVisibility) as typeof misskey.noteVisibilities[number]);
+let visibility = $ref(props.initialVisibility ?? (defaultStore.state.rememberNoteVisibility ? defaultStore.state.visibility : defaultStore.state.defaultNoteVisibility) as typeof Misskey.noteVisibilities[number]);
 let visibleUsers = $ref([]);
 if (props.initialVisibleUsers) {
 	props.initialVisibleUsers.forEach(pushVisibleUser);
@@ -420,9 +419,9 @@ let showingOptions = $ref(false);
 		files[files.findIndex(x => x.id === file.id)].name = name;
 	}
 
-	function replaceFile(file: misskey.entities.DriveFile, newFile: misskey.entities.DriveFile): void {
-		files[files.findIndex(x => x.id === file.id)] = newFile;
-	}
+function replaceFile(file: Misskey.entities.DriveFile, newFile: Misskey.entities.DriveFile): void {
+	files[files.findIndex(x => x.id === file.id)] = newFile;
+}
 
 	function upload(file: File, name?: string): void {
 		uploadFile(file, defaultStore.state.uploadFolder, name).then(res => {
@@ -536,11 +535,11 @@ let showingOptions = $ref(false);
 		os.selectUser().then(user => {
 			pushVisibleUser(user);
 
-			if (!text.toLowerCase().includes(`@${user.username.toLowerCase()}`)) {
-				text = `@${Acct.toString(user)} ${text}`;
-			}
-		});
-	}
+		if (!text.toLowerCase().includes(`@${user.username.toLowerCase()}`)) {
+			text = `@${Misskey.acct.toString(user)} ${text}`;
+		}
+	});
+}
 
 	function removeVisibleUser(user) {
 		visibleUsers = erase(user, visibleUsers);
@@ -821,11 +820,11 @@ let showingOptions = $ref(false);
 		emit('cancel');
 	}
 
-	function insertMention() {
-		os.selectUser().then(user => {
-			insertTextAtCursor(textareaEl, '@' + Acct.toString(user) + ' ');
-		});
-	}
+function insertMention() {
+	os.selectUser().then(user => {
+		insertTextAtCursor(textareaEl, '@' + Misskey.acct.toString(user) + ' ');
+	});
+}
 
 	async function insertEmoji(ev: MouseEvent) {
 		os.openEmojiPicker(ev.currentTarget ?? ev.target, {}, textareaEl);
@@ -844,7 +843,7 @@ let showingOptions = $ref(false);
 		})), ev.currentTarget ?? ev.target);
 	}
 
-	let postAccount = $ref<misskey.entities.UserDetailed | null>(null);
+let postAccount = $ref<Misskey.entities.UserDetailed | null>(null);
 
 	function openAccountMenu(ev: MouseEvent) {
 		openAccountMenu_({
