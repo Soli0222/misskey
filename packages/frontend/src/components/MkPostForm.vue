@@ -649,8 +649,10 @@ function replaceFile(file: Misskey.entities.DriveFile, newFile: Misskey.entities
 		//#endregion
 	}
 
-	function saveDraft() {
-		const draftData = JSON.parse(miLocalStorage.getItem('drafts') ?? '{}');
+function saveDraft() {
+	if (props.instant) return;
+
+	const draftData = JSON.parse(miLocalStorage.getItem('drafts') ?? '{}');
 
 		draftData[draftKey] = {
 			updatedAt: new Date(),
