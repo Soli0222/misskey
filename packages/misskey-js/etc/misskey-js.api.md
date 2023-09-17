@@ -29,6 +29,9 @@ type Ad = TODO_2;
 // @public (undocumented)
 type AdminInstanceMetadata = DetailedInstanceMetadata & {
     blockedHosts: string[];
+    app192IconUrl: string | null;
+    app512IconUrl: string | null;
+    manifestJsonOverride: string;
 };
 
 // @public (undocumented)
@@ -2537,6 +2540,7 @@ type Note = {
     reactions: Record<string, number>;
     renoteCount: number;
     repliesCount: number;
+    clippedCount?: number;
     poll?: {
         expiresAt: DateString | null;
         multiple: boolean;

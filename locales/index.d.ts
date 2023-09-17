@@ -361,7 +361,6 @@ export interface Locale {
     "driveCapacityPerLocalAccount": string;
     "driveCapacityPerRemoteAccount": string;
     "inMb": string;
-    "iconUrl": string;
     "bannerUrl": string;
     "backgroundImageUrl": string;
     "basicInfo": string;
@@ -1113,6 +1112,10 @@ export interface Locale {
     "pastAnnouncements": string;
     "youHaveUnreadAnnouncements": string;
     "useSecurityKey": string;
+    "replies": string;
+    "renotes": string;
+    "loadReplies": string;
+    "loadConversation": string;
     "_announcement": {
         "forExistingUsers": string;
         "forExistingUsersDescription": string;
@@ -1141,6 +1144,14 @@ export interface Locale {
     };
     "_serverRules": {
         "description": string;
+    };
+    "_serverSettings": {
+        "iconUrl": string;
+        "appIconDescription": string;
+        "appIconUsageExample": string;
+        "appIconStyleRecommendation": string;
+        "appIconResolutionMustBe": string;
+        "manifestJsonOverride": string;
     };
     "_accountMigration": {
         "moveFrom": string;
