@@ -173,6 +173,15 @@ export const packedUserDetailedNotMeOnlySchema = {
 				},
 			},
 		},
+		verifiedLinks: {
+			type: 'array',
+			nullable: false, optional: false,
+			items: {
+				type: 'string',
+				nullable: false, optional: false,
+				format: 'url',
+			},
+		},
 		followersCount: {
 			type: 'number',
 			nullable: false, optional: false,
