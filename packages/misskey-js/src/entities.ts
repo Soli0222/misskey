@@ -71,6 +71,7 @@ export type UserDetailed = UserLite & {
 	updatedAt: DateString | null;
 	uri: string | null;
 	url: string | null;
+	notify: 'normal' | 'none';
 };
 
 export type UserGroup = TODO;
@@ -234,7 +235,12 @@ export type Notification = {
 	userId: User['id'];
 	note: Note;
 } | {
-	type: 'pollVote';
+	type: 'note';
+	user: User;
+	userId: User['id'];
+	note: Note;
+} | {
+	type: 'pollEnded';
 	user: User;
 	userId: User['id'];
 	note: Note;

@@ -277,6 +277,10 @@ export const packedUserDetailedNotMeOnlySchema = {
 			type: 'string',
 			nullable: false, optional: true,
 		},
+		notify: {
+			type: 'string',
+			nullable: false, optional: true,
+		},
 		//#endregion
 	},
 } as const;

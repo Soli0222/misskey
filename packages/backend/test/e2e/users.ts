@@ -133,6 +133,7 @@ describe('ユーザー', () => {
 			isBlocked: user.isBlocked ?? false,
 			isMuted: user.isMuted ?? false,
 			isRenoteMuted: user.isRenoteMuted ?? false,
+			notify: user.notify ?? 'none',
 		});
 	};
 
@@ -498,7 +499,7 @@ describe('ユーザー', () => {
 		{ parameters: (): object => ({ mutedWords: [] }) },
 		{ parameters: (): object => ({ mutedInstances: ['xxxx.xxxxx'] }) },
 		{ parameters: (): object => ({ mutedInstances: [] }) },
-		{ parameters: (): object => ({ mutingNotificationTypes: ['follow', 'mention', 'reply', 'renote', 'quote', 'reaction', 'pollEnded', 'receiveFollowRequest', 'followRequestAccepted', 'achievementEarned', 'app'] }) },
+		{ parameters: (): object => ({ mutingNotificationTypes: ['note', 'follow', 'mention', 'reply', 'renote', 'quote', 'reaction', 'pollEnded', 'receiveFollowRequest', 'followRequestAccepted', 'achievementEarned', 'app'] }) },
 		{ parameters: (): object => ({ mutingNotificationTypes: [] }) },
 		{ parameters: (): object => ({ emailNotificationTypes: ['mention', 'reply', 'quote', 'follow', 'receiveFollowRequest'] }) },
 		{ parameters: (): object => ({ emailNotificationTypes: [] }) },
