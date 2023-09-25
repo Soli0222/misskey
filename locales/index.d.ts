@@ -2281,6 +2281,7 @@ export interface Locale {
         "unsuspendRemoteInstance": string;
         "markSensitiveDriveFile": string;
         "unmarkSensitiveDriveFile": string;
+        "resolveAbuseReport": string;
     };
 }
 declare const locales: {
