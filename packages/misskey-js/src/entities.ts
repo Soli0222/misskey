@@ -603,6 +603,9 @@ export type ModerationLog = {
 	type: 'unassignRole';
 	info: ModerationLogPayloads['unassignRole'];
 } | {
+	type: 'createRole';
+	info: ModerationLogPayloads['createRole'];
+} | {
 	type: 'updateRole';
 	info: ModerationLogPayloads['updateRole'];
 } | {
