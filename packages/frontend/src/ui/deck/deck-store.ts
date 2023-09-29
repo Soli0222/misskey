@@ -28,8 +28,11 @@ export type Column = {
 	listId?: string;
 	channelId?: string;
 	roleId?: string;
-	includingTypes?: typeof notificationTypes[number][];
-	tl?: 'home' | 'local' | 'social' | 'global';
+	excludeTypes?: typeof notificationTypes[number][];
+	tl?: 'home' | 'local' | 'genkai' | 'social' | 'global';
+	withRenotes?: boolean;
+	withReplies?: boolean;
+	onlyFiles?: boolean;
 };
 
 export const deckStore = markRaw(new Storage('deck', {

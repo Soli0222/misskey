@@ -11,7 +11,9 @@ import { QueryService } from '@/core/QueryService.js';
 import ActiveUsersChart from '@/core/chart/charts/active-users.js';
 import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { DI } from '@/di-symbols.js';
+import { RoleService } from '@/core/RoleService.js';
 import { IdService } from '@/core/IdService.js';
+import { ApiError } from '../../error.js';
 
 export const meta = {
 	tags: ['notes'],
@@ -25,6 +27,14 @@ export const meta = {
 			type: 'object',
 			optional: false, nullable: false,
 			ref: 'Note',
+		},
+	},
+
+	errors: {
+		stlDisabled: {
+			message: 'Genkai timeline has been disabled.',
+			code: 'GkTL_DISABLED',
+			id: '620763f4-f621-4533-ab33-0577a1a3c224',
 		},
 	},
 } as const;
@@ -42,7 +52,6 @@ export const paramDef = {
 		includeLocalRenotes: { type: 'boolean', default: true },
 		withFiles: { type: 'boolean', default: false },
 		withReplies: { type: 'boolean', default: false },
-		withRenotes: { type: 'boolean', default: true },
 	},
 	required: [],
 } as const;
@@ -58,33 +67,32 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 		private noteEntityService: NoteEntityService,
 		private queryService: QueryService,
+		private roleService: RoleService,
 		private activeUsersChart: ActiveUsersChart,
 		private idService: IdService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
-			const followees = await this.followingsRepository.createQueryBuilder('following')
-				.select('following.followeeId')
-				.where('following.followerId = :followerId', { followerId: me.id })
-				.getMany();
+			const policies = await this.roleService.getUserPolicies(me.id);
 
 			//#region Construct query
+			const followingQuery = this.followingsRepository.createQueryBuilder('following')
+				.select('following.followeeId')
+				.where('following.followerId = :followerId', { followerId: me.id });
+
 			const query = this.queryService.makePaginationQuery(this.notesRepository.createQueryBuilder('note'),
 				ps.sinceId, ps.untilId, ps.sinceDate, ps.untilDate)
-				// パフォーマンス上の利点が無さそう？
-				//.andWhere('note.id > :minId', { minId: this.idService.genId(new Date(Date.now() - (1000 * 60 * 60 * 24 * 10))) }) // 10日前まで
+				.andWhere('note.id > :minId', { minId: this.idService.genId(new Date(Date.now() - (1000 * 60 * 60 * 24 * 10))) }) // 10日前まで
+				.andWhere(new Brackets(qb => {
+					qb.where(`((note.userId IN (${ followingQuery.getQuery() })) OR (note.userId = :meId))`, { meId: me.id })
+						.orWhere('(note.visibility = \'public\') AND (note.userHost IS NULL)');
+				}))
+				.andWhere('(note.text ~* \'\\.\\.\\.$\' OR note.text ~* \'…$\') AND LENGTH(note.text) <= 15')
 				.innerJoinAndSelect('note.user', 'user')
 				.leftJoinAndSelect('note.reply', 'reply')
 				.leftJoinAndSelect('note.renote', 'renote')
 				.leftJoinAndSelect('reply.user', 'replyUser')
-				.leftJoinAndSelect('renote.user', 'renoteUser');
-
-			if (followees.length > 0) {
-				const meOrFolloweeIds = [me.id, ...followees.map(f => f.followeeId)];
-
-				query.andWhere('note.userId IN (:...meOrFolloweeIds)', { meOrFolloweeIds: meOrFolloweeIds });
-			} else {
-				query.andWhere('note.userId = :meId', { meId: me.id });
-			}
+				.leftJoinAndSelect('renote.user', 'renoteUser')
+				.setParameters(followingQuery.getParameters());
 
 			this.queryService.generateChannelQuery(query, me);
 			this.queryService.generateRepliesQuery(query, ps.withReplies, me);
@@ -126,16 +134,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			if (ps.withFiles) {
 				query.andWhere('note.fileIds != \'{}\'');
-			}
-
-			if (ps.withRenotes === false) {
-				query.andWhere(new Brackets(qb => {
-					qb.orWhere('note.renoteId IS NULL');
-					qb.orWhere(new Brackets(qb => {
-						qb.orWhere('note.text IS NOT NULL');
-						qb.orWhere('note.fileIds != \'{}\'');
-					}));
-				}));
 			}
 			//#endregion
 
