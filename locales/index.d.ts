@@ -2079,6 +2079,7 @@ export interface Locale {
     "_timelines": {
         "home": string;
         "local": string;
+        "genkai": string;
         "social": string;
         "global": string;
     };

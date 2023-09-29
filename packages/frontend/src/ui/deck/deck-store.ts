@@ -29,7 +29,7 @@ export type Column = {
 	channelId?: string;
 	roleId?: string;
 	includingTypes?: typeof notificationTypes[number][];
-	tl?: 'home' | 'local' | 'social' | 'global';
+	tl?: 'home' | 'local' | 'genkai' | 'social' | 'global';
 };
 
 export const deckStore = markRaw(new Storage('deck', {
