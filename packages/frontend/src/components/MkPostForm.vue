@@ -147,6 +147,7 @@ const props = withDefaults(defineProps<{
 	fixed?: boolean;
 	autofocus?: boolean;
 	freezeAfterPosted?: boolean;
+	updateMode?: boolean;
 }>(), {
 	initialVisibleUsers: () => [],
 	autofocus: true,
@@ -718,19 +719,20 @@ function saveDraft() {
 			}
 		}
 
-		let postData = {
-			text: text === '' ? undefined : text,
-			fileIds: files.length > 0 ? files.map(f => f.id) : undefined,
-			replyId: props.reply ? props.reply.id : undefined,
-			renoteId: props.renote ? props.renote.id : quoteId ? quoteId : undefined,
-			channelId: props.channel ? props.channel.id : undefined,
-			poll: poll,
-			cw: useCw ? cw ?? '' : undefined,
-			localOnly: localOnly,
-			visibility: visibility,
-			visibleUserIds: visibility === 'specified' ? visibleUsers.map(u => u.id) : undefined,
-			reactionAcceptance,
-		};
+	let postData = {
+		text: text === '' ? null : text,
+		fileIds: files.length > 0 ? files.map(f => f.id) : undefined,
+		replyId: props.reply ? props.reply.id : undefined,
+		renoteId: props.renote ? props.renote.id : quoteId ? quoteId : undefined,
+		channelId: props.channel ? props.channel.id : undefined,
+		poll: poll,
+		cw: useCw ? cw ?? '' : null,
+		localOnly: localOnly,
+		visibility: visibility,
+		visibleUserIds: visibility === 'specified' ? visibleUsers.map(u => u.id) : undefined,
+		reactionAcceptance,
+		noteId: props.updateMode ? props.initialNote?.id : undefined,
+	};
 
 		if (withHashtags && hashtags && hashtags.trim() !== '') {
 			const hashtags_ = hashtags.trim().split(' ').map(x => x.startsWith('#') ? x : '#' + x).join(' ');
@@ -751,23 +753,23 @@ function saveDraft() {
 			token = storedAccounts.find(x => x.id === postAccount.id)?.token;
 		}
 
-		posting = true;
-		os.api('notes/create', postData, token).then(() => {
-			if (props.freezeAfterPosted) {
-				posted = true;
-			} else {
-				clear();
+	posting = true;
+	os.api(props.updateMode ? 'notes/update' : 'notes/create', postData, token).then(() => {
+		if (props.freezeAfterPosted) {
+			posted = true;
+		} else {
+			clear();
+		}
+		nextTick(() => {
+			deleteDraft();
+			emit('posted');
+			if (postData.text && postData.text !== '') {
+				const hashtags_ = mfm.parse(postData.text).filter(x => x.type === 'hashtag').map(x => x.props.hashtag);
+				const history = JSON.parse(miLocalStorage.getItem('hashtags') ?? '[]') as string[];
+				miLocalStorage.setItem('hashtags', JSON.stringify(unique(hashtags_.concat(history))));
 			}
-			nextTick(() => {
-				deleteDraft();
-				emit('posted');
-				if (postData.text && postData.text !== '') {
-					const hashtags_ = mfm.parse(postData.text).filter(x => x.type === 'hashtag').map(x => x.props.hashtag);
-					const history = JSON.parse(miLocalStorage.getItem('hashtags') ?? '[]') as string[];
-					miLocalStorage.setItem('hashtags', JSON.stringify(unique(hashtags_.concat(history))));
-				}
-				posting = false;
-				postAccount = null;
+			posting = false;
+			postAccount = null;
 
 				incNotesCount();
 				if (notesCount === 1) {
@@ -832,18 +834,20 @@ function insertMention() {
 		os.openEmojiPicker(ev.currentTarget ?? ev.target, {}, textareaEl);
 	}
 
-	function showActions(ev) {
-		os.popupMenu(postFormActions.map(action => ({
-			text: action.title,
-			action: () => {
-				action.handler({
-					text: text,
-				}, (key, value) => {
-					if (key === 'text') { text = value; }
-				});
-			},
-		})), ev.currentTarget ?? ev.target);
-	}
+function showActions(ev) {
+	os.popupMenu(postFormActions.map(action => ({
+		text: action.title,
+		action: () => {
+			action.handler({
+				text: text,
+				cw: cw,
+			}, (key, value) => {
+				if (key === 'text') { text = value; }
+				if (key === 'cw') { useCw = value !== null; cw = value; }
+			});
+		},
+	})), ev.currentTarget ?? ev.target);
+}
 
 let postAccount = $ref<Misskey.entities.UserDetailed | null>(null);
 
