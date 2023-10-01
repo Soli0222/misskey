@@ -1974,6 +1974,7 @@ export interface Locale {
             "chooseList": string;
         };
         "clicker": string;
+        "spn": string;
     };
     "_cw": {
         "hide": string;

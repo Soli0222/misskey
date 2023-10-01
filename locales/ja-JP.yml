@@ -1890,6 +1890,7 @@ _widgets:
   _userList:
     chooseList: "リストを選択"
   clicker: "クリッカー"
+  spn: "Spotify NowPlaying"
 
 _cw:
   hide: "隠す"
