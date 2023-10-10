@@ -454,7 +454,6 @@ async function checkFav(note) {
 		noteId: note.id,
 	});
 	favorited = result.isFavorited;
-	console.log('After checkFav: favorited =', favorited);
 }
 
 async function toggleFavorite(favorite: boolean) {
