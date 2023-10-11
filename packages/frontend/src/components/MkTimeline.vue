@@ -109,8 +109,15 @@ if (props.src === 'antenna') {
 	connection.on('note', prepend);
 } else if (props.src === 'genkai') {
 	endpoint = 'notes/genkai-timeline';
-	connection = stream.useChannel('genkaiTimeline');
-	connection.on('note', prependFilterdGenkai);
+	query = {
+		withRenotes: props.withRenotes,
+		withFiles: props.onlyFiles ? true : undefined,
+	};
+	connection = stream.useChannel('genkaiTimeline', {
+		withRenotes: props.withRenotes,
+		withFiles: props.onlyFiles ? true : undefined,
+	});
+	connection.on('note', prepend);
 } else if (props.src === 'social') {
 	endpoint = 'notes/hybrid-timeline';
 	query = {
