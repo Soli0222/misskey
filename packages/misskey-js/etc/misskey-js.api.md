@@ -1783,6 +1783,16 @@ export type Endpoints = {
         };
         res: Note[];
     };
+    'notes/genkai-timeline': {
+        req: {
+            limit?: number;
+            sinceId?: Note['id'];
+            untilId?: Note['id'];
+            sinceDate?: number;
+            untilDate?: number;
+        };
+        res: Note[];
+    };
     'notes/local-timeline': {
         req: {
             limit?: number;

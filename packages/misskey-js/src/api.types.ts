@@ -513,6 +513,7 @@ export type Endpoints = {
 	'notes/featured': { req: TODO; res: Note[]; };
 	'notes/global-timeline': { req: { limit?: number; sinceId?: Note['id']; untilId?: Note['id']; sinceDate?: number; untilDate?: number; }; res: Note[]; };
 	'notes/hybrid-timeline': { req: { limit?: number; sinceId?: Note['id']; untilId?: Note['id']; sinceDate?: number; untilDate?: number; }; res: Note[]; };
+	'notes/genkai-timeline': { req: { limit?: number; sinceId?: Note['id']; untilId?: Note['id']; sinceDate?: number; untilDate?: number; }; res: Note[]; };
 	'notes/local-timeline': { req: { limit?: number; sinceId?: Note['id']; untilId?: Note['id']; sinceDate?: number; untilDate?: number; }; res: Note[]; };
 	'notes/mentions': { req: { following?: boolean; limit?: number; sinceId?: Note['id']; untilId?: Note['id']; }; res: Note[]; };
 	'notes/polls/recommendation': { req: TODO; res: TODO; };
