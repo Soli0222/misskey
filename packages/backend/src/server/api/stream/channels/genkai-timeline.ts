@@ -8,10 +8,8 @@ import { checkWordMute } from '@/misc/check-word-mute.js';
 import { isUserRelated } from '@/misc/is-user-related.js';
 import { isInstanceMuted } from '@/misc/is-instance-muted.js';
 import type { Packed } from '@/misc/json-schema.js';
-import { MetaService } from '@/core/MetaService.js';
 import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { bindThis } from '@/decorators.js';
-import { RoleService } from '@/core/RoleService.js';
 import Channel from '../channel.js';
 
 class GenkaiTimelineChannel extends Channel {
@@ -22,8 +20,6 @@ class GenkaiTimelineChannel extends Channel {
 	private withFiles: boolean;
 
 	constructor(
-		private metaService: MetaService,
-		private roleService: RoleService,
 		private noteEntityService: NoteEntityService,
 
 		id: string,
@@ -34,14 +30,10 @@ class GenkaiTimelineChannel extends Channel {
 	}
 
 	@bindThis
-	public async init(params: any): Promise<void> {
-		const policies = await this.roleService.getUserPolicies(this.user ? this.user.id : null);
-		if (!policies.ltlAvailable) return;
-
+	public async init(params: any) {
 		this.withRenotes = params.withRenotes ?? true;
 		this.withFiles = params.withFiles ?? false;
 
-		// Subscribe events
 		this.subscriber.on('notesStream', this.onNote);
 	}
 
@@ -49,16 +41,15 @@ class GenkaiTimelineChannel extends Channel {
 	private async onNote(note: Packed<'Note'>) {
 		if (this.withFiles && (note.fileIds == null || note.fileIds.length === 0)) return;
 
-		// チャンネルの投稿ではなく、自分自身の投稿 または
-		// チャンネルの投稿ではなく、その投稿のユーザーをフォローしている または
-		// チャンネルの投稿ではなく、全体公開のローカルの投稿 または
-		// フォローしているチャンネルの投稿 の場合だけ
-		if (!(
-			(note.channelId == null && this.user!.id === note.userId) ||
-			(note.channelId == null && Object.hasOwn(this.following, note.userId)) ||
-			(note.channelId == null && (note.user.host == null && note.visibility === 'public')) ||
-			(note.channelId != null && this.followingChannels.has(note.channelId))
-		)) return;
+		if (note.channelId) {
+			if (!this.followingChannels.has(note.channelId)) return;
+		} else {
+			// その投稿のユーザーをフォローしていなかったら弾く
+			if ((this.user!.id !== note.userId) && !Object.hasOwn(this.following, note.userId)) return;
+		}
+
+		// Ignore notes from instances the user has muted
+		if (isInstanceMuted(note, new Set<string>(this.userProfile!.mutedInstances ?? []))) return;
 
 		if (['followers', 'specified'].includes(note.visibility)) {
 			note = await this.noteEntityService.pack(note.id, this.user!, {
@@ -83,9 +74,6 @@ class GenkaiTimelineChannel extends Channel {
 			}
 		}
 
-		// Ignore notes from instances the user has muted
-		if (isInstanceMuted(note, new Set<string>(this.userProfile!.mutedInstances ?? []))) return;
-
 		// 関係ない返信は除外
 		if (note.reply && !this.following[note.userId]?.withReplies) {
 			const reply = note.reply;
@@ -108,7 +96,7 @@ class GenkaiTimelineChannel extends Channel {
 	}
 
 	@bindThis
-	public dispose(): void {
+	public dispose() {
 		// Unsubscribe events
 		this.subscriber.off('notesStream', this.onNote);
 	}
@@ -120,8 +108,6 @@ export class GenkaiTimelineChannelService {
 	public readonly requireCredential = GenkaiTimelineChannel.requireCredential;
 
 	constructor(
-		private metaService: MetaService,
-		private roleService: RoleService,
 		private noteEntityService: NoteEntityService,
 	) {
 	}
@@ -129,8 +115,6 @@ export class GenkaiTimelineChannelService {
 	@bindThis
 	public create(id: string, connection: Channel['connection']): GenkaiTimelineChannel {
 		return new GenkaiTimelineChannel(
-			this.metaService,
-			this.roleService,
 			this.noteEntityService,
 			id,
 			connection,
