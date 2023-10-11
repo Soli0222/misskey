@@ -215,13 +215,6 @@ export type Channels = {
         };
         receives: null;
     };
-    genkaiTimeline: {
-        params: null;
-        events: {
-            note: (payload: Note) => void;
-        };
-        receives: null;
-    };
     hybridTimeline: {
         params: null;
         events: {
@@ -1781,16 +1774,6 @@ export type Endpoints = {
         res: Note[];
     };
     'notes/hybrid-timeline': {
-        req: {
-            limit?: number;
-            sinceId?: Note['id'];
-            untilId?: Note['id'];
-            sinceDate?: number;
-            untilDate?: number;
-        };
-        res: Note[];
-    };
-    'notes/genkai-timeline': {
         req: {
             limit?: number;
             sinceId?: Note['id'];
