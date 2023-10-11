@@ -8,15 +8,14 @@ import { Inject, Injectable } from '@nestjs/common';
 import * as Redis from 'ioredis';
 import type { NotesRepository, FollowingsRepository, MiNote } from '@/models/_.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
+import { QueryService } from '@/core/QueryService.js';
 import ActiveUsersChart from '@/core/chart/charts/active-users.js';
 import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { DI } from '@/di-symbols.js';
-import { RoleService } from '@/core/RoleService.js';
 import { IdService } from '@/core/IdService.js';
-import { isUserRelated } from '@/misc/is-user-related.js';
 import { CacheService } from '@/core/CacheService.js';
+import { isUserRelated } from '@/misc/is-user-related.js';
 import { RedisTimelineService } from '@/core/RedisTimelineService.js';
-import { ApiError } from '../../error.js';
 
 export const meta = {
 	tags: ['notes'],
@@ -30,14 +29,6 @@ export const meta = {
 			type: 'object',
 			optional: false, nullable: false,
 			ref: 'Note',
-		},
-	},
-
-	errors: {
-		stlDisabled: {
-			message: 'Genkai timeline has been disabled.',
-			code: 'GkTL_DISABLED',
-			id: '620763f4-f621-4533-ab33-0577a1a3c224',
 		},
 	},
 } as const;
@@ -69,7 +60,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private notesRepository: NotesRepository,
 
 		private noteEntityService: NoteEntityService,
-		private roleService: RoleService,
 		private activeUsersChart: ActiveUsersChart,
 		private idService: IdService,
 		private cacheService: CacheService,
@@ -79,28 +69,19 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			const untilId = ps.untilId ?? (ps.untilDate ? this.idService.genId(new Date(ps.untilDate!)) : null);
 			const sinceId = ps.sinceId ?? (ps.sinceDate ? this.idService.genId(new Date(ps.sinceDate!)) : null);
 
-			const policies = await this.roleService.getUserPolicies(me.id);
-			if (!policies.ltlAvailable) {
-				throw new ApiError(meta.errors.stlDisabled);
-			}
-
 			const [
+				followings,
 				userIdsWhoMeMuting,
 				userIdsWhoMeMutingRenotes,
 				userIdsWhoBlockingMe,
 			] = await Promise.all([
+				this.cacheService.userFollowingsCache.fetch(me.id),
 				this.cacheService.userMutingsCache.fetch(me.id),
 				this.cacheService.renoteMutingsCache.fetch(me.id),
 				this.cacheService.userBlockedCache.fetch(me.id),
 			]);
 
-			const [htlNoteIds, ltlNoteIds] = await this.redisTimelineService.getMulti([
-				ps.withFiles ? `homeTimelineWithFiles:${me.id}` : `homeTimeline:${me.id}`,
-				ps.withFiles ? 'localTimelineWithFiles' : 'localTimeline',
-			], untilId, sinceId);
-
-			let noteIds = Array.from(new Set([...htlNoteIds, ...ltlNoteIds]));
-			noteIds.sort((a, b) => a > b ? -1 : 1);
+			let noteIds = await this.redisTimelineService.get(ps.withFiles ? `homeTimelineWithFiles:${me.id}` : `homeTimeline:${me.id}`, untilId, sinceId);
 			noteIds = noteIds.slice(0, ps.limit);
 
 			if (noteIds.length === 0) {
@@ -130,6 +111,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 						if (isUserRelated(note, userIdsWhoMeMutingRenotes)) return false;
 						if (ps.withRenotes === false) return false;
 					}
+				}
+				if (note.reply && note.reply.visibility === 'followers') {
+					if (!Object.hasOwn(followings, note.reply.userId)) return false;
 				}
 
 				return true;
