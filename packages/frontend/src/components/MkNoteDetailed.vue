@@ -122,10 +122,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button v-if="appearNote.myReaction != null" ref="reactButton" class="_button" :class="[$style.noteFooterButton, $style.reacted]" @click="undoReact(appearNote)">
 				<i class="ti ti-minus"></i>
 			</button>
-			<button v-if="favorited" ref="favButton" :class="$style.footerButton" class="_button" @click="toggleFavorite(false)">
+			<button v-if="favorited" ref="favButton" :class="$style.noteFooterButton" class="_button" @click="toggleFavorite(false)">
 				<i class="ti ti-star-off"></i>
 			</button>
-			<button v-else ref="favButton" :class="$style.footerButton" class="_button" @click="toggleFavorite(true)">
+			<button v-else ref="favButton" :class="$style.noteFooterButton" class="_button" @click="toggleFavorite(true)">
 				<i class="ti ti-star"></i>
 			</button>
 			<button v-if="defaultStore.state.showClipButtonInNoteFooter" ref="clipButton" class="_button" :class="$style.noteFooterButton" @mousedown="clip()">
