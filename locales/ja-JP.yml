@@ -2004,7 +2004,6 @@ _instanceCharts:
 _timelines:
   home: "ホーム"
   local: "ローカル"
-  genkai: "限界"
   social: "ソーシャル"
   global: "グローバル"
 

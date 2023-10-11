@@ -161,11 +161,6 @@ const headerTabs = $computed(() => [...(defaultStore.reactiveState.pinnedUserLis
 	title: i18n.ts._timelines.home,
 	icon: 'ti ti-home',
 	iconOnly: true,
-}, {
-	key: 'genkai',
-	title: i18n.ts._timelines.genkai,
-	icon: 'ti ti-bolt',
-	iconOnly: true,
 }, ...(isLocalTimelineAvailable ? [{
 	key: 'local',
 	title: i18n.ts._timelines.local,

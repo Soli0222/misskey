@@ -123,10 +123,6 @@ const choose = async (ev) => {
 		icon: 'ti ti-planet',
 		action: () => { setSrc('local'); },
 	}, {
-		text: i18n.ts._timelines.genkai,
-		icon: 'ti ti-bolt',
-		action: () => { setSrc('genkai'); },
-	}, {
 		text: i18n.ts._timelines.social,
 		icon: 'ti ti-universe',
 		action: () => { setSrc('social'); },

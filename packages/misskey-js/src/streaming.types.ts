@@ -56,13 +56,6 @@ export type Channels = {
 		};
 		receives: null;
 	};
-	genkaiTimeLine: {
-		params: null;
-		events: {
-			note: (payload: Note) => void;
-		};
-		receives: null;
-	};
 	hybridTimeline: {
 		params: null;
 		events: {
