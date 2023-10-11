@@ -57,16 +57,6 @@ const prepend = note => {
 	}
 };
 
-const prependFilterdGenkai = note => {
-	if (note.text.endsWith('…') && note.text.length <= 15) {
-		tlComponent.pagingComponent?.prepend(note);
-	}
-	emit('note');
-	if (props.sound) {
-		sound.play($i && (note.userId === $i.id) ? 'noteMy' : 'note');
-	}
-};
-
 let endpoint;
 let query;
 let connection;
@@ -107,10 +97,6 @@ if (props.src === 'antenna') {
 		withFiles: props.onlyFiles ? true : undefined,
 	});
 	connection.on('note', prepend);
-} else if (props.src === 'genkai') {
-	endpoint = 'notes/genkai-timeline';
-	connection = stream.useChannel('genkaiTimeline');
-	connection.on('note', prependFilterdGenkai);
 } else if (props.src === 'social') {
 	endpoint = 'notes/hybrid-timeline';
 	query = {
