@@ -19,6 +19,7 @@ import type { UsersRepository, NotesRepository, FollowingsRepository, PollsRepos
 import { bindThis } from '@/decorators.js';
 import { isNotNull } from '@/misc/is-not-null.js';
 import { DebounceLoader } from '@/misc/loader.js';
+import { IdService } from '@/core/IdService.js';
 import type { OnModuleInit } from '@nestjs/common';
 import type { CustomEmojiService } from '../CustomEmojiService.js';
 import type { ReactionService } from '../ReactionService.js';
@@ -31,6 +32,7 @@ export class NoteEntityService implements OnModuleInit {
 	private driveFileEntityService: DriveFileEntityService;
 	private customEmojiService: CustomEmojiService;
 	private reactionService: ReactionService;
+	private idService: IdService;
 	private noteLoader = new DebounceLoader(this.findNoteOrFail);
 
 	constructor(
@@ -69,6 +71,7 @@ export class NoteEntityService implements OnModuleInit {
 		this.driveFileEntityService = this.moduleRef.get('DriveFileEntityService');
 		this.customEmojiService = this.moduleRef.get('CustomEmojiService');
 		this.reactionService = this.moduleRef.get('ReactionService');
+		this.idService = this.moduleRef.get('IdService');
 	}
 
 	@bindThis
@@ -170,11 +173,11 @@ export class NoteEntityService implements OnModuleInit {
 	}
 
 	@bindThis
-	private async populateMyReaction(note: MiNote, meId: MiUser['id'], _hint_?: {
+	public async populateMyReaction(noteId: MiNote['id'], meId: MiUser['id'], _hint_?: {
 		myReactions: Map<MiNote['id'], MiNoteReaction | null>;
 	}) {
 		if (_hint_?.myReactions) {
-			const reaction = _hint_.myReactions.get(note.id);
+			const reaction = _hint_.myReactions.get(noteId);
 			if (reaction) {
 				return this.reactionService.convertLegacyReaction(reaction.reaction);
 			} else if (reaction === null) {
@@ -183,14 +186,14 @@ export class NoteEntityService implements OnModuleInit {
 		// 実装上抜けがあるだけかもしれないので、「ヒントに含まれてなかったら(=undefinedなら)return」のようにはしない
 		}
 
-		// パフォーマンスのためノートが作成されてから1秒以上経っていない場合はリアクションを取得しない
-		if (note.createdAt.getTime() + 1000 > Date.now()) {
+		// パフォーマンスのためノートが作成されてから2秒以上経っていない場合はリアクションを取得しない
+		if (this.idService.parse(noteId).date.getTime() + 2000 > Date.now()) {
 			return undefined;
 		}
 
 		const reaction = await this.noteReactionsRepository.findOneBy({
 			userId: meId,
-			noteId: note.id,
+			noteId: noteId,
 		});
 
 		if (reaction) {
@@ -310,7 +313,7 @@ export class NoteEntityService implements OnModuleInit {
 
 		const packed: Packed<'Note'> = await awaitAll({
 			id: note.id,
-			createdAt: note.createdAt.toISOString(),
+			createdAt: this.idService.parse(note.id).date.toISOString(),
 			userId: note.userId,
 			user: this.userEntityService.pack(note.user ?? note.userId, me, {
 				detail: false,
@@ -318,7 +321,7 @@ export class NoteEntityService implements OnModuleInit {
 			text: text,
 			cw: note.cw,
 			visibility: note.visibility,
-			localOnly: note.localOnly ?? undefined,
+			localOnly: note.localOnly,
 			reactionAcceptance: note.reactionAcceptance,
 			visibleUserIds: note.visibility === 'specified' ? note.visibleUserIds : undefined,
 			renoteCount: note.renoteCount,
@@ -358,7 +361,7 @@ export class NoteEntityService implements OnModuleInit {
 				poll: note.hasPoll ? this.populatePoll(note, meId) : undefined,
 
 				...(meId ? {
-					myReaction: this.populateMyReaction(note, meId, options?._hint_),
+					myReaction: this.populateMyReaction(note.id, meId, options?._hint_),
 				} : {}),
 			} : {}),
 		});
@@ -423,8 +426,9 @@ export class NoteEntityService implements OnModuleInit {
 		const myReactionsMap = new Map<MiNote['id'], MiNoteReaction | null>();
 		if (meId) {
 			const renoteIds = notes.filter(n => n.renoteId != null).map(n => n.renoteId!);
-			// パフォーマンスのためノートが作成されてから1秒以上経っていない場合はリアクションを取得しない
-			const targets = [...notes.filter(n => n.createdAt.getTime() + 1000 < Date.now()).map(n => n.id), ...renoteIds];
+			// パフォーマンスのためノートが作成されてから2秒以上経っていない場合はリアクションを取得しない
+			const oldId = this.idService.gen(Date.now() - 2000);
+			const targets = [...notes.filter(n => n.id < oldId).map(n => n.id), ...renoteIds];
 			const myReactions = await this.noteReactionsRepository.findBy({
 				userId: meId,
 				noteId: In(targets),
