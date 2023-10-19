@@ -28,6 +28,9 @@ export type UserLite = {
 		faviconUrl: Instance['faviconUrl'];
 		themeColor: Instance['themeColor'];
 	};
+	isCat?: boolean;
+	isSheep?: boolean;
+	isBot?: boolean;
 };
 
 export type UserDetailed = UserLite & {
