@@ -94,7 +94,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<footer>
 			<div :class="$style.noteFooterInfo">
 				<MkA :to="notePage(appearNote)">
-					<MkTime :time="appearNote.createdAt" mode="detail"/>
+					<MkTime :time="appearNote.createdAt" mode="detail" colored/>
 				</MkA>
 			</div>
 			<MkReactionsViewer ref="reactionsViewer" :note="appearNote"/>
@@ -306,6 +306,7 @@ checkFav(appearNote);
 useNoteCapture({
 	rootEl: el,
 	note: $$(appearNote),
+	pureNote: $$(note),
 	isDeletedRef: isDeleted,
 });
 
