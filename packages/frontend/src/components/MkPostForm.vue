@@ -4,102 +4,102 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-	<div
-		:class="[$style.root, { [$style.modal]: modal, _popup: modal }]"
-		@dragover.stop="onDragover"
-		@dragenter="onDragenter"
-		@dragleave="onDragleave"
-		@drop.stop="onDrop"
-	>
-		<header :class="$style.header">
-			<div :class="$style.headerLeft">
-				<button v-if="!fixed" :class="$style.cancel" class="_button" @click="cancel"><i class="ti ti-x"></i></button>
-				<button v-click-anime v-tooltip="i18n.ts.switchAccount" :class="$style.account" class="_button" @click="openAccountMenu">
-					<MkAvatar :user="postAccount ?? $i" :class="$style.avatar"/>
-				</button>
-			</div>
-			<div :class="$style.headerRight">
-				<template v-if="!(channel != null && fixed)">
-					<button v-if="channel == null" ref="visibilityButton" v-click-anime v-tooltip="i18n.ts.visibility" :class="['_button', $style.headerRightItem, $style.visibility]" @click="setVisibility">
-						<span v-if="visibility === 'public'"><i class="ti ti-world"></i></span>
-						<span v-if="visibility === 'home'"><i class="ti ti-home"></i></span>
-						<span v-if="visibility === 'followers'"><i class="ti ti-lock"></i></span>
-						<span v-if="visibility === 'specified'"><i class="ti ti-mail"></i></span>
-						<span :class="$style.headerRightButtonText">{{ i18n.ts._visibility[visibility] }}</span>
-					</button>
-					<button v-else class="_button" :class="[$style.headerRightItem, $style.visibility]" disabled>
-						<span><i class="ti ti-device-tv"></i></span>
-						<span :class="$style.headerRightButtonText">{{ channel.name }}</span>
-					</button>
-				</template>
-				<button v-click-anime v-tooltip="i18n.ts._visibility.disableFederation" class="_button" :class="[$style.headerRightItem, { [$style.danger]: localOnly }]" :disabled="channel != null || visibility === 'specified'" @click="toggleLocalOnly">
-					<span v-if="!localOnly"><i class="ti ti-rocket"></i></span>
-					<span v-else><i class="ti ti-rocket-off"></i></span>
-				</button>
-				<button v-click-anime v-tooltip="i18n.ts._visibility.circle" class="_button" :class="[$style.headerRightItem, { [$style.circle]: localOnly && visibility === 'followers'}]" :disabled="channel != null || visibility === 'specified'" @click="toggleCircle">
-						<span v-if="visibility === 'followers' && localOnly === true"><i class="ti ti-heart-handshake"></i></span>
-						<span v-else><i class="ti ti-planet"></i></span>
-				</button>
-				<button v-click-anime v-tooltip="i18n.ts.reactionAcceptance" class="_button" :class="[$style.headerRightItem, { [$style.danger]: reactionAcceptance === 'likeOnly' }]" @click="toggleReactionAcceptance">
-					<span v-if="reactionAcceptance === 'likeOnly'"><i class="ti ti-heart"></i></span>
-					<span v-else-if="reactionAcceptance === 'likeOnlyForRemote'"><i class="ti ti-heart-plus"></i></span>
-					<span v-else><i class="ti ti-icons"></i></span>
-				</button>
-				<button v-click-anime class="_button" :class="$style.submit" :disabled="!canPost" data-cy-open-post-form-submit @click="post">
-					<div :class="$style.submitInner">
-						<template v-if="posted"></template>
-						<template v-else-if="posting"><MkEllipsis/></template>
-						<template v-else>{{ submitText }}</template>
-						<i style="margin-left: 6px;" :class="posted ? 'ti ti-check' : reply ? 'ti ti-arrow-back-up' : renote ? 'ti ti-quote' : 'ti ti-send'"></i>
-					</div>
-				</button>
-			</div>
-		</header>
-		<MkNoteSimple v-if="reply" :class="$style.targetNote" :note="reply"/>
-		<MkNoteSimple v-if="renote" :class="$style.targetNote" :note="renote"/>
-		<div v-if="quoteId" :class="$style.withQuote"><i class="ti ti-quote"></i> {{ i18n.ts.quoteAttached }}<button @click="quoteId = null"><i class="ti ti-x"></i></button></div>
-		<div v-if="visibility === 'specified'" :class="$style.toSpecified">
-			<span style="margin-right: 8px;">{{ i18n.ts.recipient }}</span>
-			<div :class="$style.visibleUsers">
-				<span v-for="u in visibleUsers" :key="u.id" :class="$style.visibleUser">
-					<MkAcct :user="u"/>
-					<button class="_button" style="padding: 4px 8px;" @click="removeVisibleUser(u)"><i class="ti ti-x"></i></button>
-				</span>
-				<button class="_buttonPrimary" style="padding: 4px; border-radius: 8px;" @click="addVisibleUser"><i class="ti ti-plus ti-fw"></i></button>
-			</div>
+<div
+	:class="[$style.root, { [$style.modal]: modal, _popup: modal }]"
+	@dragover.stop="onDragover"
+	@dragenter="onDragenter"
+	@dragleave="onDragleave"
+	@drop.stop="onDrop"
+>
+	<header :class="$style.header">
+		<div :class="$style.headerLeft">
+			<button v-if="!fixed" :class="$style.cancel" class="_button" @click="cancel"><i class="ti ti-x"></i></button>
+			<button v-click-anime v-tooltip="i18n.ts.switchAccount" :class="$style.account" class="_button" @click="openAccountMenu">
+				<MkAvatar :user="postAccount ?? $i" :class="$style.avatar"/>
+			</button>
 		</div>
-		<MkInfo v-if="hasNotSpecifiedMentions" warn :class="$style.hasNotSpecifiedMentions">{{ i18n.ts.notSpecifiedMentionWarning }} - <button class="_textButton" @click="addMissingMention()">{{ i18n.ts.add }}</button></MkInfo>
-		<input v-show="useCw" ref="cwInputEl" v-model="cw" :class="$style.cw" :placeholder="i18n.ts.annotation" @keydown="onKeydown">
-		<div :class="[$style.textOuter, { [$style.withCw]: useCw }]">
-			<textarea ref="textareaEl" v-model="text" :class="[$style.text]" :disabled="posting || posted" :placeholder="placeholder" data-cy-post-form-text @keydown="onKeydown" @paste="onPaste" @compositionupdate="onCompositionUpdate" @compositionend="onCompositionEnd"/>
-			<div v-if="maxTextLength - textLength < 100" :class="['_acrylic', $style.textCount, { [$style.textOver]: textLength > maxTextLength }]">{{ maxTextLength - textLength }}</div>
+		<div :class="$style.headerRight">
+			<template v-if="!(channel != null && fixed)">
+				<button v-if="channel == null" ref="visibilityButton" v-click-anime v-tooltip="i18n.ts.visibility" :class="['_button', $style.headerRightItem, $style.visibility]" @click="setVisibility">
+					<span v-if="visibility === 'public'"><i class="ti ti-world"></i></span>
+					<span v-if="visibility === 'home'"><i class="ti ti-home"></i></span>
+					<span v-if="visibility === 'followers'"><i class="ti ti-lock"></i></span>
+					<span v-if="visibility === 'specified'"><i class="ti ti-mail"></i></span>
+					<span :class="$style.headerRightButtonText">{{ i18n.ts._visibility[visibility] }}</span>
+				</button>
+				<button v-else class="_button" :class="[$style.headerRightItem, $style.visibility]" disabled>
+					<span><i class="ti ti-device-tv"></i></span>
+					<span :class="$style.headerRightButtonText">{{ channel.name }}</span>
+				</button>
+			</template>
+			<button v-click-anime v-tooltip="i18n.ts._visibility.disableFederation" class="_button" :class="[$style.headerRightItem, { [$style.danger]: localOnly }]" :disabled="channel != null || visibility === 'specified'" @click="toggleLocalOnly">
+				<span v-if="!localOnly"><i class="ti ti-rocket"></i></span>
+				<span v-else><i class="ti ti-rocket-off"></i></span>
+			</button>
+			<button v-click-anime v-tooltip="i18n.ts._visibility.circle" class="_button" :class="[$style.headerRightItem, { [$style.circle]: localOnly && visibility === 'followers'}]" :disabled="channel != null || visibility === 'specified'" @click="toggleCircle">
+				<span v-if="visibility === 'followers' && localOnly === true"><i class="ti ti-heart-handshake"></i></span>
+				<span v-else><i class="ti ti-planet"></i></span>
+			</button>
+			<button v-click-anime v-tooltip="i18n.ts.reactionAcceptance" class="_button" :class="[$style.headerRightItem, { [$style.danger]: reactionAcceptance === 'likeOnly' }]" @click="toggleReactionAcceptance">
+				<span v-if="reactionAcceptance === 'likeOnly'"><i class="ti ti-heart"></i></span>
+				<span v-else-if="reactionAcceptance === 'likeOnlyForRemote'"><i class="ti ti-heart-plus"></i></span>
+				<span v-else><i class="ti ti-icons"></i></span>
+			</button>
+			<button v-click-anime class="_button" :class="$style.submit" :disabled="!canPost" data-cy-open-post-form-submit @click="post">
+				<div :class="$style.submitInner">
+					<template v-if="posted"></template>
+					<template v-else-if="posting"><MkEllipsis/></template>
+					<template v-else>{{ submitText }}</template>
+					<i style="margin-left: 6px;" :class="posted ? 'ti ti-check' : reply ? 'ti ti-arrow-back-up' : renote ? 'ti ti-quote' : 'ti ti-send'"></i>
+				</div>
+			</button>
 		</div>
-		<input v-show="withHashtags" ref="hashtagsInputEl" v-model="hashtags" :class="$style.hashtags" :placeholder="i18n.ts.hashtags" list="hashtags">
-		<XPostFormAttaches v-model="files" @detach="detachFile" @changeSensitive="updateFileSensitive" @changeName="updateFileName" @replaceFile="replaceFile"/>
-		<MkPollEditor v-if="poll" v-model="poll" @destroyed="poll = null"/>
-		<MkNotePreview v-if="showPreview" :class="$style.preview" :text="text"/>
-		<div v-if="showingOptions" style="padding: 8px 16px;">
+	</header>
+	<MkNoteSimple v-if="reply" :class="$style.targetNote" :note="reply"/>
+	<MkNoteSimple v-if="renote" :class="$style.targetNote" :note="renote"/>
+	<div v-if="quoteId" :class="$style.withQuote"><i class="ti ti-quote"></i> {{ i18n.ts.quoteAttached }}<button @click="quoteId = null"><i class="ti ti-x"></i></button></div>
+	<div v-if="visibility === 'specified'" :class="$style.toSpecified">
+		<span style="margin-right: 8px;">{{ i18n.ts.recipient }}</span>
+		<div :class="$style.visibleUsers">
+			<span v-for="u in visibleUsers" :key="u.id" :class="$style.visibleUser">
+				<MkAcct :user="u"/>
+				<button class="_button" style="padding: 4px 8px;" @click="removeVisibleUser(u)"><i class="ti ti-x"></i></button>
+			</span>
+			<button class="_buttonPrimary" style="padding: 4px; border-radius: 8px;" @click="addVisibleUser"><i class="ti ti-plus ti-fw"></i></button>
 		</div>
-		<footer :class="$style.footer">
-			<div :class="$style.footerLeft">
-				<button v-tooltip="i18n.ts.attachFile" class="_button" :class="$style.footerButton" @click="chooseFileFrom"><i class="ti ti-photo-plus"></i></button>
-				<button v-tooltip="i18n.ts.poll" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: poll }]" @click="togglePoll"><i class="ti ti-chart-arrows"></i></button>
-				<button v-tooltip="i18n.ts.useCw" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: useCw }]" @click="useCw = !useCw"><i class="ti ti-eye-off"></i></button>
-				<button v-tooltip="i18n.ts.mention" class="_button" :class="$style.footerButton" @click="insertMention"><i class="ti ti-at"></i></button>
-				<button v-tooltip="i18n.ts.hashtags" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: withHashtags }]" @click="withHashtags = !withHashtags"><i class="ti ti-hash"></i></button>
-				<button v-if="postFormActions.length > 0" v-tooltip="i18n.ts.plugin" class="_button" :class="$style.footerButton" @click="showActions"><i class="ti ti-plug"></i></button>
-				<button v-tooltip="i18n.ts.emoji" :class="['_button', $style.footerButton]" @click="insertEmoji"><i class="ti ti-mood-happy"></i></button>
-			</div>
-			<div :class="$style.footerRight">
-				<button v-tooltip="i18n.ts.previewNoteText" class="_button" :class="[$style.footerButton, { [$style.previewButtonActive]: showPreview }]" @click="showPreview = !showPreview"><i class="ti ti-eye"></i></button>
-				<!--<button v-tooltip="i18n.ts.more" class="_button" :class="$style.footerButton" @click="showingOptions = !showingOptions"><i class="ti ti-dots"></i></button>-->
-			</div>
-		</footer>
-		<datalist id="hashtags">
-			<option v-for="hashtag in recentHashtags" :key="hashtag" :value="hashtag"/>
-		</datalist>
 	</div>
-	</template>
+	<MkInfo v-if="hasNotSpecifiedMentions" warn :class="$style.hasNotSpecifiedMentions">{{ i18n.ts.notSpecifiedMentionWarning }} - <button class="_textButton" @click="addMissingMention()">{{ i18n.ts.add }}</button></MkInfo>
+	<input v-show="useCw" ref="cwInputEl" v-model="cw" :class="$style.cw" :placeholder="i18n.ts.annotation" @keydown="onKeydown">
+	<div :class="[$style.textOuter, { [$style.withCw]: useCw }]">
+		<textarea ref="textareaEl" v-model="text" :class="[$style.text]" :disabled="posting || posted" :placeholder="placeholder" data-cy-post-form-text @keydown="onKeydown" @paste="onPaste" @compositionupdate="onCompositionUpdate" @compositionend="onCompositionEnd"/>
+		<div v-if="maxTextLength - textLength < 100" :class="['_acrylic', $style.textCount, { [$style.textOver]: textLength > maxTextLength }]">{{ maxTextLength - textLength }}</div>
+	</div>
+	<input v-show="withHashtags" ref="hashtagsInputEl" v-model="hashtags" :class="$style.hashtags" :placeholder="i18n.ts.hashtags" list="hashtags">
+	<XPostFormAttaches v-model="files" @detach="detachFile" @changeSensitive="updateFileSensitive" @changeName="updateFileName" @replaceFile="replaceFile"/>
+	<MkPollEditor v-if="poll" v-model="poll" @destroyed="poll = null"/>
+	<MkNotePreview v-if="showPreview" :class="$style.preview" :text="text" :user="postAccount ?? $i"/>
+	<div v-if="showingOptions" style="padding: 8px 16px;">
+	</div>
+	<footer :class="$style.footer">
+		<div :class="$style.footerLeft">
+			<button v-tooltip="i18n.ts.attachFile" class="_button" :class="$style.footerButton" @click="chooseFileFrom"><i class="ti ti-photo-plus"></i></button>
+			<button v-tooltip="i18n.ts.poll" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: poll }]" @click="togglePoll"><i class="ti ti-chart-arrows"></i></button>
+			<button v-tooltip="i18n.ts.useCw" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: useCw }]" @click="useCw = !useCw"><i class="ti ti-eye-off"></i></button>
+			<button v-tooltip="i18n.ts.mention" class="_button" :class="$style.footerButton" @click="insertMention"><i class="ti ti-at"></i></button>
+			<button v-tooltip="i18n.ts.hashtags" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: withHashtags }]" @click="withHashtags = !withHashtags"><i class="ti ti-hash"></i></button>
+			<button v-if="postFormActions.length > 0" v-tooltip="i18n.ts.plugin" class="_button" :class="$style.footerButton" @click="showActions"><i class="ti ti-plug"></i></button>
+			<button v-tooltip="i18n.ts.emoji" :class="['_button', $style.footerButton]" @click="insertEmoji"><i class="ti ti-mood-happy"></i></button>
+		</div>
+		<div :class="$style.footerRight">
+			<button v-tooltip="i18n.ts.previewNoteText" class="_button" :class="[$style.footerButton, { [$style.previewButtonActive]: showPreview }]" @click="showPreview = !showPreview"><i class="ti ti-eye"></i></button>
+			<!--<button v-tooltip="i18n.ts.more" class="_button" :class="$style.footerButton" @click="showingOptions = !showingOptions"><i class="ti ti-dots"></i></button>-->
+		</div>
+	</footer>
+	<datalist id="hashtags">
+		<option v-for="hashtag in recentHashtags" :key="hashtag" :value="hashtag"/>
+	</datalist>
+</div>
+</template>
 
 <script lang="ts" setup>
 import { inject, watch, nextTick, onMounted, defineAsyncComponent } from 'vue';
