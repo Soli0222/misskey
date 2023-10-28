@@ -497,13 +497,11 @@ function replaceFile(file: Misskey.entities.DriveFile, newFile: Misskey.entities
 			visibility = 'public';
 			localOnly = true; // TODO: チャンネルが連合するようになった折には消す
 			return;
-		}
-		else if (visibility == 'followers' && localOnly == true){
+		} else if (visibility === 'followers' && localOnly === true) {
 			visibility = 'public';
 			localOnly = false;
 			return;
-		}
-		else {
+		} else {
 			visibility = 'followers';
 			localOnly = true;
 		}
