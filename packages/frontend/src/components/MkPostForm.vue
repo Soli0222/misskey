@@ -4,105 +4,105 @@ SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
-	<div
-		:class="[$style.root, { [$style.modal]: modal, _popup: modal }]"
-		@dragover.stop="onDragover"
-		@dragenter="onDragenter"
-		@dragleave="onDragleave"
-		@drop.stop="onDrop"
-	>
-		<header :class="$style.header">
-			<div :class="$style.headerLeft">
-				<button v-if="!fixed" :class="$style.cancel" class="_button" @click="cancel"><i class="ti ti-x"></i></button>
-				<button v-click-anime v-tooltip="i18n.ts.switchAccount" :class="$style.account" class="_button" @click="openAccountMenu">
-					<MkAvatar :user="postAccount ?? $i" :class="$style.avatar"/>
-				</button>
-			</div>
-			<div :class="$style.headerRight">
-				<template v-if="!(channel != null && fixed)">
-					<button v-if="channel == null" ref="visibilityButton" v-click-anime v-tooltip="i18n.ts.visibility" :class="['_button', $style.headerRightItem, $style.visibility]" @click="setVisibility">
-						<span v-if="visibility === 'public'"><i class="ti ti-world"></i></span>
-						<span v-if="visibility === 'home'"><i class="ti ti-home"></i></span>
-						<span v-if="visibility === 'followers'"><i class="ti ti-lock"></i></span>
-						<span v-if="visibility === 'specified'"><i class="ti ti-mail"></i></span>
-						<span :class="$style.headerRightButtonText">{{ i18n.ts._visibility[visibility] }}</span>
-					</button>
-					<button v-else class="_button" :class="[$style.headerRightItem, $style.visibility]" disabled>
-						<span><i class="ti ti-device-tv"></i></span>
-						<span :class="$style.headerRightButtonText">{{ channel.name }}</span>
-					</button>
-				</template>
-				<button v-click-anime v-tooltip="i18n.ts._visibility.disableFederation" class="_button" :class="[$style.headerRightItem, { [$style.danger]: localOnly }]" :disabled="channel != null || visibility === 'specified'" @click="toggleLocalOnly">
-					<span v-if="!localOnly"><i class="ti ti-rocket"></i></span>
-					<span v-else><i class="ti ti-rocket-off"></i></span>
-				</button>
-				<button v-click-anime v-tooltip="i18n.ts._visibility.circle" class="_button" :class="[$style.headerRightItem, { [$style.circle]: localOnly && visibility === 'followers'}]" :disabled="channel != null || visibility === 'specified'" @click="toggleCircle">
-						<span v-if="visibility === 'followers' && localOnly === true"><i class="ti ti-heart-handshake"></i></span>
-						<span v-else><i class="ti ti-planet"></i></span>
-				</button>
-				<button v-click-anime v-tooltip="i18n.ts.reactionAcceptance" class="_button" :class="[$style.headerRightItem, { [$style.danger]: reactionAcceptance === 'likeOnly' }]" @click="toggleReactionAcceptance">
-					<span v-if="reactionAcceptance === 'likeOnly'"><i class="ti ti-heart"></i></span>
-					<span v-else-if="reactionAcceptance === 'likeOnlyForRemote'"><i class="ti ti-heart-plus"></i></span>
-					<span v-else><i class="ti ti-icons"></i></span>
-				</button>
-				<button v-click-anime class="_button" :class="$style.submit" :disabled="!canPost" data-cy-open-post-form-submit @click="post">
-					<div :class="$style.submitInner">
-						<template v-if="posted"></template>
-						<template v-else-if="posting"><MkEllipsis/></template>
-						<template v-else>{{ submitText }}</template>
-						<i style="margin-left: 6px;" :class="posted ? 'ti ti-check' : reply ? 'ti ti-arrow-back-up' : renote ? 'ti ti-quote' : 'ti ti-send'"></i>
-					</div>
-				</button>
-			</div>
-		</header>
-		<MkNoteSimple v-if="reply" :class="$style.targetNote" :note="reply"/>
-		<MkNoteSimple v-if="renote" :class="$style.targetNote" :note="renote"/>
-		<div v-if="quoteId" :class="$style.withQuote"><i class="ti ti-quote"></i> {{ i18n.ts.quoteAttached }}<button @click="quoteId = null"><i class="ti ti-x"></i></button></div>
-		<div v-if="visibility === 'specified'" :class="$style.toSpecified">
-			<span style="margin-right: 8px;">{{ i18n.ts.recipient }}</span>
-			<div :class="$style.visibleUsers">
-				<span v-for="u in visibleUsers" :key="u.id" :class="$style.visibleUser">
-					<MkAcct :user="u"/>
-					<button class="_button" style="padding: 4px 8px;" @click="removeVisibleUser(u)"><i class="ti ti-x"></i></button>
-				</span>
-				<button class="_buttonPrimary" style="padding: 4px; border-radius: 8px;" @click="addVisibleUser"><i class="ti ti-plus ti-fw"></i></button>
-			</div>
+<div
+	:class="[$style.root, { [$style.modal]: modal, _popup: modal }]"
+	@dragover.stop="onDragover"
+	@dragenter="onDragenter"
+	@dragleave="onDragleave"
+	@drop.stop="onDrop"
+>
+	<header :class="$style.header">
+		<div :class="$style.headerLeft">
+			<button v-if="!fixed" :class="$style.cancel" class="_button" @click="cancel"><i class="ti ti-x"></i></button>
+			<button v-click-anime v-tooltip="i18n.ts.switchAccount" :class="$style.account" class="_button" @click="openAccountMenu">
+				<MkAvatar :user="postAccount ?? $i" :class="$style.avatar"/>
+			</button>
 		</div>
-		<MkInfo v-if="hasNotSpecifiedMentions" warn :class="$style.hasNotSpecifiedMentions">{{ i18n.ts.notSpecifiedMentionWarning }} - <button class="_textButton" @click="addMissingMention()">{{ i18n.ts.add }}</button></MkInfo>
-		<input v-show="useCw" ref="cwInputEl" v-model="cw" :class="$style.cw" :placeholder="i18n.ts.annotation" @keydown="onKeydown">
-		<div :class="[$style.textOuter, { [$style.withCw]: useCw }]">
-			<textarea ref="textareaEl" v-model="text" :class="[$style.text]" :disabled="posting || posted" :placeholder="placeholder" data-cy-post-form-text @keydown="onKeydown" @paste="onPaste" @compositionupdate="onCompositionUpdate" @compositionend="onCompositionEnd"/>
-			<div v-if="maxTextLength - textLength < 100" :class="['_acrylic', $style.textCount, { [$style.textOver]: textLength > maxTextLength }]">{{ maxTextLength - textLength }}</div>
+		<div :class="$style.headerRight">
+			<template v-if="!(channel != null && fixed)">
+				<button v-if="channel == null" ref="visibilityButton" v-click-anime v-tooltip="i18n.ts.visibility" :class="['_button', $style.headerRightItem, $style.visibility]" @click="setVisibility">
+					<span v-if="visibility === 'public'"><i class="ti ti-world"></i></span>
+					<span v-if="visibility === 'home'"><i class="ti ti-home"></i></span>
+					<span v-if="visibility === 'followers'"><i class="ti ti-lock"></i></span>
+					<span v-if="visibility === 'specified'"><i class="ti ti-mail"></i></span>
+					<span :class="$style.headerRightButtonText">{{ i18n.ts._visibility[visibility] }}</span>
+				</button>
+				<button v-else class="_button" :class="[$style.headerRightItem, $style.visibility]" disabled>
+					<span><i class="ti ti-device-tv"></i></span>
+					<span :class="$style.headerRightButtonText">{{ channel.name }}</span>
+				</button>
+			</template>
+			<button v-click-anime v-tooltip="i18n.ts._visibility.disableFederation" class="_button" :class="[$style.headerRightItem, { [$style.danger]: localOnly }]" :disabled="channel != null || visibility === 'specified'" @click="toggleLocalOnly">
+				<span v-if="!localOnly"><i class="ti ti-rocket"></i></span>
+				<span v-else><i class="ti ti-rocket-off"></i></span>
+			</button>
+			<button v-click-anime v-tooltip="i18n.ts._visibility.circle" class="_button" :class="[$style.headerRightItem, { [$style.circle]: localOnly && visibility === 'followers'}]" :disabled="channel != null || visibility === 'specified'" @click="toggleCircle">
+				<span v-if="visibility === 'followers' && localOnly === true"><i class="ti ti-heart-handshake"></i></span>
+				<span v-else><i class="ti ti-planet"></i></span>
+			</button>
+			<button v-click-anime v-tooltip="i18n.ts.reactionAcceptance" class="_button" :class="[$style.headerRightItem, { [$style.danger]: reactionAcceptance === 'likeOnly' }]" @click="toggleReactionAcceptance">
+				<span v-if="reactionAcceptance === 'likeOnly'"><i class="ti ti-heart"></i></span>
+				<span v-else-if="reactionAcceptance === 'likeOnlyForRemote'"><i class="ti ti-heart-plus"></i></span>
+				<span v-else><i class="ti ti-icons"></i></span>
+			</button>
+			<button v-click-anime class="_button" :class="$style.submit" :disabled="!canPost" data-cy-open-post-form-submit @click="post">
+				<div :class="$style.submitInner">
+					<template v-if="posted"></template>
+					<template v-else-if="posting"><MkEllipsis/></template>
+					<template v-else>{{ submitText }}</template>
+					<i style="margin-left: 6px;" :class="posted ? 'ti ti-check' : reply ? 'ti ti-arrow-back-up' : renote ? 'ti ti-quote' : 'ti ti-send'"></i>
+				</div>
+			</button>
 		</div>
-		<input v-show="withHashtags" ref="hashtagsInputEl" v-model="hashtags" :class="$style.hashtags" :placeholder="i18n.ts.hashtags" list="hashtags">
-		<XPostFormAttaches v-model="files" @detach="detachFile" @changeSensitive="updateFileSensitive" @changeName="updateFileName" @replaceFile="replaceFile"/>
-		<MkPollEditor v-if="poll" v-model="poll" @destroyed="poll = null"/>
-		<MkNotePreview v-if="showPreview" :class="$style.preview" :text="text"/>
-		<div v-if="showingOptions" style="padding: 8px 16px;">
+	</header>
+	<MkNoteSimple v-if="reply" :class="$style.targetNote" :note="reply"/>
+	<MkNoteSimple v-if="renote" :class="$style.targetNote" :note="renote"/>
+	<div v-if="quoteId" :class="$style.withQuote"><i class="ti ti-quote"></i> {{ i18n.ts.quoteAttached }}<button @click="quoteId = null"><i class="ti ti-x"></i></button></div>
+	<div v-if="visibility === 'specified'" :class="$style.toSpecified">
+		<span style="margin-right: 8px;">{{ i18n.ts.recipient }}</span>
+		<div :class="$style.visibleUsers">
+			<span v-for="u in visibleUsers" :key="u.id" :class="$style.visibleUser">
+				<MkAcct :user="u"/>
+				<button class="_button" style="padding: 4px 8px;" @click="removeVisibleUser(u)"><i class="ti ti-x"></i></button>
+			</span>
+			<button class="_buttonPrimary" style="padding: 4px; border-radius: 8px;" @click="addVisibleUser"><i class="ti ti-plus ti-fw"></i></button>
 		</div>
-		<footer :class="$style.footer">
-			<div :class="$style.footerLeft">
-				<button v-tooltip="i18n.ts.attachFile" class="_button" :class="$style.footerButton" @click="chooseFileFrom"><i class="ti ti-photo-plus"></i></button>
-				<button v-tooltip="i18n.ts.poll" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: poll }]" @click="togglePoll"><i class="ti ti-chart-arrows"></i></button>
-				<button v-tooltip="i18n.ts.useCw" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: useCw }]" @click="useCw = !useCw"><i class="ti ti-eye-off"></i></button>
-				<button v-tooltip="i18n.ts.mention" class="_button" :class="$style.footerButton" @click="insertMention"><i class="ti ti-at"></i></button>
-				<button v-tooltip="i18n.ts.hashtags" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: withHashtags }]" @click="withHashtags = !withHashtags"><i class="ti ti-hash"></i></button>
-				<button v-if="postFormActions.length > 0" v-tooltip="i18n.ts.plugin" class="_button" :class="$style.footerButton" @click="showActions"><i class="ti ti-plug"></i></button>
-				<button v-tooltip="i18n.ts.emoji" :class="['_button', $style.footerButton]" @click="insertEmoji"><i class="ti ti-mood-happy"></i></button>
-			</div>
-			<div :class="$style.footerRight">
-				<button v-tooltip="i18n.ts.previewNoteText" class="_button" :class="[$style.footerButton, { [$style.previewButtonActive]: showPreview }]" @click="showPreview = !showPreview"><i class="ti ti-eye"></i></button>
-				<!--<button v-tooltip="i18n.ts.more" class="_button" :class="$style.footerButton" @click="showingOptions = !showingOptions"><i class="ti ti-dots"></i></button>-->
-			</div>
-		</footer>
-		<datalist id="hashtags">
-			<option v-for="hashtag in recentHashtags" :key="hashtag" :value="hashtag"/>
-		</datalist>
 	</div>
-	</template>
+	<MkInfo v-if="hasNotSpecifiedMentions" warn :class="$style.hasNotSpecifiedMentions">{{ i18n.ts.notSpecifiedMentionWarning }} - <button class="_textButton" @click="addMissingMention()">{{ i18n.ts.add }}</button></MkInfo>
+	<input v-show="useCw" ref="cwInputEl" v-model="cw" :class="$style.cw" :placeholder="i18n.ts.annotation" @keydown="onKeydown">
+	<div :class="[$style.textOuter, { [$style.withCw]: useCw }]">
+		<textarea ref="textareaEl" v-model="text" :class="[$style.text]" :disabled="posting || posted" :placeholder="placeholder" data-cy-post-form-text @keydown="onKeydown" @paste="onPaste" @compositionupdate="onCompositionUpdate" @compositionend="onCompositionEnd"/>
+		<div v-if="maxTextLength - textLength < 100" :class="['_acrylic', $style.textCount, { [$style.textOver]: textLength > maxTextLength }]">{{ maxTextLength - textLength }}</div>
+	</div>
+	<input v-show="withHashtags" ref="hashtagsInputEl" v-model="hashtags" :class="$style.hashtags" :placeholder="i18n.ts.hashtags" list="hashtags">
+	<XPostFormAttaches v-model="files" @detach="detachFile" @changeSensitive="updateFileSensitive" @changeName="updateFileName" @replaceFile="replaceFile"/>
+	<MkPollEditor v-if="poll" v-model="poll" @destroyed="poll = null"/>
+	<MkNotePreview v-if="showPreview" :class="$style.preview" :text="text" :user="postAccount ?? $i"/>
+	<div v-if="showingOptions" style="padding: 8px 16px;">
+	</div>
+	<footer :class="$style.footer">
+		<div :class="$style.footerLeft">
+			<button v-tooltip="i18n.ts.attachFile" class="_button" :class="$style.footerButton" @click="chooseFileFrom"><i class="ti ti-photo-plus"></i></button>
+			<button v-tooltip="i18n.ts.poll" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: poll }]" @click="togglePoll"><i class="ti ti-chart-arrows"></i></button>
+			<button v-tooltip="i18n.ts.useCw" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: useCw }]" @click="useCw = !useCw"><i class="ti ti-eye-off"></i></button>
+			<button v-tooltip="i18n.ts.mention" class="_button" :class="$style.footerButton" @click="insertMention"><i class="ti ti-at"></i></button>
+			<button v-tooltip="i18n.ts.hashtags" class="_button" :class="[$style.footerButton, { [$style.footerButtonActive]: withHashtags }]" @click="withHashtags = !withHashtags"><i class="ti ti-hash"></i></button>
+			<button v-if="postFormActions.length > 0" v-tooltip="i18n.ts.plugin" class="_button" :class="$style.footerButton" @click="showActions"><i class="ti ti-plug"></i></button>
+			<button v-tooltip="i18n.ts.emoji" :class="['_button', $style.footerButton]" @click="insertEmoji"><i class="ti ti-mood-happy"></i></button>
+		</div>
+		<div :class="$style.footerRight">
+			<button v-tooltip="i18n.ts.previewNoteText" class="_button" :class="[$style.footerButton, { [$style.previewButtonActive]: showPreview }]" @click="showPreview = !showPreview"><i class="ti ti-eye"></i></button>
+			<!--<button v-tooltip="i18n.ts.more" class="_button" :class="$style.footerButton" @click="showingOptions = !showingOptions"><i class="ti ti-dots"></i></button>-->
+		</div>
+	</footer>
+	<datalist id="hashtags">
+		<option v-for="hashtag in recentHashtags" :key="hashtag" :value="hashtag"/>
+	</datalist>
+</div>
+</template>
 
 <script lang="ts" setup>
-import { inject, watch, nextTick, onMounted, defineAsyncComponent } from 'vue';
+import { inject, watch, nextTick, onMounted, defineAsyncComponent, provide } from 'vue';
 import * as mfm from 'mfm-js';
 import * as Misskey from 'misskey-js';
 import insertTextAtCursor from 'insert-text-at-cursor';
@@ -147,16 +147,23 @@ const props = withDefaults(defineProps<{
 	fixed?: boolean;
 	autofocus?: boolean;
 	freezeAfterPosted?: boolean;
+	mock?: boolean;
 }>(), {
 	initialVisibleUsers: () => [],
 	autofocus: true,
+	mock: false,
 });
 
-	const emit = defineEmits<{
-		(ev: 'posted'): void;
-		(ev: 'cancel'): void;
-		(ev: 'esc'): void;
-	}>();
+provide('mock', props.mock);
+
+const emit = defineEmits<{
+	(ev: 'posted'): void;
+	(ev: 'cancel'): void;
+	(ev: 'esc'): void;
+
+	// Mock用
+	(ev: 'fileChangeSensitive', fileId: string, to: boolean): void;
+}>();
 
 	const textareaEl = $shallowRef<HTMLTextAreaElement | null>(null);
 	const cwInputEl = $shallowRef<HTMLInputElement | null>(null);
@@ -242,12 +249,12 @@ let showingOptions = $ref(false);
 		return instance ? instance.maxNoteTextLength : 1000;
 	});
 
-	const canPost = $computed((): boolean => {
-		return !posting && !posted &&
-			(1 <= textLength || 1 <= files.length || !!poll || !!props.renote) &&
-			(textLength <= maxTextLength) &&
-			(!poll || poll.choices.length >= 2);
-	});
+const canPost = $computed((): boolean => {
+	return !props.mock && !posting && !posted &&
+		(1 <= textLength || 1 <= files.length || !!poll || !!props.renote) &&
+		(textLength <= maxTextLength) &&
+		(!poll || poll.choices.length >= 2);
+});
 
 	const withHashtags = $computed(defaultStore.makeGetterSetter('postFormWithHashtags'));
 	const hashtags = $computed(defaultStore.makeGetterSetter('postFormHashtags'));
@@ -292,9 +299,13 @@ let showingOptions = $ref(false);
 			// 重複は除外
 			if (text.includes(`${mention} `)) continue;
 
-			text += `${mention} `;
-		}
+		text += `${mention} `;
 	}
+}
+
+if ($i?.isSilenced && visibility === 'public') {
+	visibility = 'home';
+}
 
 	if (props.channel) {
 		visibility = 'public';
@@ -399,21 +410,26 @@ let showingOptions = $ref(false);
 		}
 	}
 
-	function chooseFileFrom(ev) {
-		selectFiles(ev.currentTarget ?? ev.target, i18n.ts.attachFile).then(files_ => {
-			for (const file of files_) {
-				files.push(file);
-			}
-		});
-	}
+function chooseFileFrom(ev) {
+	if (props.mock) return;
+
+	selectFiles(ev.currentTarget ?? ev.target, i18n.ts.attachFile).then(files_ => {
+		for (const file of files_) {
+			files.push(file);
+		}
+	});
+}
 
 	function detachFile(id) {
 		files = files.filter(x => x.id !== id);
 	}
 
-	function updateFileSensitive(file, sensitive) {
-		files[files.findIndex(x => x.id === file.id)].isSensitive = sensitive;
+function updateFileSensitive(file, sensitive) {
+	if (props.mock) {
+		emit('fileChangeSensitive', file.id, sensitive);
 	}
+	files[files.findIndex(x => x.id === file.id)].isSensitive = sensitive;
+}
 
 	function updateFileName(file, name) {
 		files[files.findIndex(x => x.id === file.id)].name = name;
@@ -423,11 +439,13 @@ function replaceFile(file: Misskey.entities.DriveFile, newFile: Misskey.entities
 	files[files.findIndex(x => x.id === file.id)] = newFile;
 }
 
-	function upload(file: File, name?: string): void {
-		uploadFile(file, defaultStore.state.uploadFolder, name).then(res => {
-			files.push(res);
-		});
-	}
+function upload(file: File, name?: string): void {
+	if (props.mock) return;
+
+	uploadFile(file, defaultStore.state.uploadFolder, name).then(res => {
+		files.push(res);
+	});
+}
 
 	function setVisibility() {
 		if (props.channel) {
@@ -436,19 +454,20 @@ function replaceFile(file: Misskey.entities.DriveFile, newFile: Misskey.entities
 			return;
 		}
 
-		os.popup(defineAsyncComponent(() => import('@/components/MkVisibilityPicker.vue')), {
-			currentVisibility: visibility,
-			localOnly: localOnly,
-			src: visibilityButton,
-		}, {
-			changeVisibility: v => {
-				visibility = v;
-				if (defaultStore.state.rememberNoteVisibility) {
-					defaultStore.set('visibility', visibility);
-				}
-			},
-		}, 'closed');
-	}
+	os.popup(defineAsyncComponent(() => import('@/components/MkVisibilityPicker.vue')), {
+		currentVisibility: visibility,
+		isSilenced: $i?.isSilenced,
+		localOnly: localOnly,
+		src: visibilityButton,
+	}, {
+		changeVisibility: v => {
+			visibility = v;
+			if (defaultStore.state.rememberNoteVisibility) {
+				defaultStore.set('visibility', visibility);
+			}
+		},
+	}, 'closed');
+}
 
 	async function toggleLocalOnly() {
 		if (props.channel) {
@@ -497,13 +516,11 @@ function replaceFile(file: Misskey.entities.DriveFile, newFile: Misskey.entities
 			visibility = 'public';
 			localOnly = true; // TODO: チャンネルが連合するようになった折には消す
 			return;
-		}
-		else if (visibility == 'followers' && localOnly == true){
+		} else if (visibility === 'followers' && localOnly === true) {
 			visibility = 'public';
 			localOnly = false;
 			return;
-		}
-		else {
+		} else {
 			visibility = 'followers';
 			localOnly = true;
 		}
@@ -565,16 +582,18 @@ function replaceFile(file: Misskey.entities.DriveFile, newFile: Misskey.entities
 		imeText = '';
 	}
 
-	async function onPaste(ev: ClipboardEvent) {
-		for (const { item, i } of Array.from(ev.clipboardData.items, (item, i) => ({ item, i }))) {
-			if (item.kind === 'file') {
-				const file = item.getAsFile();
-				const lio = file.name.lastIndexOf('.');
-				const ext = lio >= 0 ? file.name.slice(lio) : '';
-				const formatted = `${formatTimeString(new Date(file.lastModified), defaultStore.state.pastedFileName).replace(/{{number}}/g, `${i + 1}`)}${ext}`;
-				upload(file, formatted);
-			}
+async function onPaste(ev: ClipboardEvent) {
+	if (props.mock) return;
+
+	for (const { item, i } of Array.from(ev.clipboardData.items, (item, i) => ({ item, i }))) {
+		if (item.kind === 'file') {
+			const file = item.getAsFile();
+			const lio = file.name.lastIndexOf('.');
+			const ext = lio >= 0 ? file.name.slice(lio) : '';
+			const formatted = `${formatTimeString(new Date(file.lastModified), defaultStore.state.pastedFileName).replace(/{{number}}/g, `${i + 1}`)}${ext}`;
+			upload(file, formatted);
 		}
+	}
 
 		const paste = ev.clipboardData.getData('text');
 
@@ -650,7 +669,7 @@ function replaceFile(file: Misskey.entities.DriveFile, newFile: Misskey.entities
 	}
 
 function saveDraft() {
-	if (props.instant) return;
+	if (props.instant || props.mock) return;
 
 	const draftData = JSON.parse(miLocalStorage.getItem('drafts') ?? '{}');
 
@@ -678,14 +697,24 @@ function saveDraft() {
 		miLocalStorage.setItem('drafts', JSON.stringify(draftData));
 	}
 
-	async function post(ev?: MouseEvent) {
-		if (ev) {
-			const el = ev.currentTarget ?? ev.target;
-			const rect = el.getBoundingClientRect();
-			const x = rect.left + (el.offsetWidth / 2);
-			const y = rect.top + (el.offsetHeight / 2);
-			os.popup(MkRippleEffect, { x, y }, {}, 'end');
-		}
+async function post(ev?: MouseEvent) {
+	if (useCw && (cw == null || cw.trim() === '')) {
+		os.alert({
+			type: 'error',
+			text: i18n.ts.cwNotationRequired,
+		});
+		return;
+	}
+
+	if (ev) {
+		const el = ev.currentTarget ?? ev.target;
+		const rect = el.getBoundingClientRect();
+		const x = rect.left + (el.offsetWidth / 2);
+		const y = rect.top + (el.offsetHeight / 2);
+		os.popup(MkRippleEffect, { x, y }, {}, 'end');
+	}
+
+	if (props.mock) return;
 
 		const annoying =
 			text.includes('$[x2') ||
@@ -849,20 +878,22 @@ function showActions(ev) {
 
 let postAccount = $ref<Misskey.entities.UserDetailed | null>(null);
 
-	function openAccountMenu(ev: MouseEvent) {
-		openAccountMenu_({
-			withExtraOperation: false,
-			includeCurrentAccount: true,
-			active: postAccount != null ? postAccount.id : $i.id,
-			onChoose: (account) => {
-				if (account.id === $i.id) {
-					postAccount = null;
-				} else {
-					postAccount = account;
-				}
-			},
-		}, ev);
-	}
+function openAccountMenu(ev: MouseEvent) {
+	if (props.mock) return;
+
+	openAccountMenu_({
+		withExtraOperation: false,
+		includeCurrentAccount: true,
+		active: postAccount != null ? postAccount.id : $i.id,
+		onChoose: (account) => {
+			if (account.id === $i.id) {
+				postAccount = null;
+			} else {
+				postAccount = account;
+			}
+		},
+	}, ev);
+}
 
 	onMounted(() => {
 		if (props.autofocus) {
@@ -878,22 +909,22 @@ let postAccount = $ref<Misskey.entities.UserDetailed | null>(null);
 		new Autocomplete(cwInputEl, $$(cw));
 		new Autocomplete(hashtagsInputEl, $$(hashtags));
 
-		nextTick(() => {
-			// 書きかけの投稿を復元
-			if (!props.instant && !props.mention && !props.specified) {
-				const draft = JSON.parse(miLocalStorage.getItem('drafts') ?? '{}')[draftKey];
-				if (draft) {
-					text = draft.data.text;
-					useCw = draft.data.useCw;
-					cw = draft.data.cw;
-					visibility = draft.data.visibility;
-					localOnly = draft.data.localOnly;
-					files = (draft.data.files || []).filter(draftFile => draftFile);
-					if (draft.data.poll) {
-						poll = draft.data.poll;
-					}
+	nextTick(() => {
+		// 書きかけの投稿を復元
+		if (!props.instant && !props.mention && !props.specified && !props.mock) {
+			const draft = JSON.parse(miLocalStorage.getItem('drafts') ?? '{}')[draftKey];
+			if (draft) {
+				text = draft.data.text;
+				useCw = draft.data.useCw;
+				cw = draft.data.cw;
+				visibility = draft.data.visibility;
+				localOnly = draft.data.localOnly;
+				files = (draft.data.files || []).filter(draftFile => draftFile);
+				if (draft.data.poll) {
+					poll = draft.data.poll;
 				}
 			}
+		}
 
 			// 削除して編集
 			if (props.initialNote) {
