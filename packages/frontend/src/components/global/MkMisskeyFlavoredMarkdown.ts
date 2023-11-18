@@ -7,6 +7,7 @@ import { VNode, h } from 'vue';
 import * as mfm from 'mfm-js';
 import * as Misskey from 'misskey-js';
 import MkUrl from '@/components/global/MkUrl.vue';
+import MkTime from '@/components/global/MkTime.vue';
 import MkLink from '@/components/MkLink.vue';
 import MkMention from '@/components/MkMention.vue';
 import MkEmoji from '@/components/global/MkEmoji.vue';
@@ -37,8 +38,8 @@ type MfmProps = {
 	isNote?: boolean;
 	emojiUrls?: string[];
 	rootScale?: number;
-	nyaize: boolean | 'account';
-	myaize: boolean | 'account';
+	nyaize: boolean | 'respect';
+	myaize: boolean | 'respect';
 	parsedNodes?: mfm.MfmNode[] | null;
 	enableEmojiMenu?: boolean;
 	enableEmojiMenuReaction?: boolean;
@@ -47,8 +48,8 @@ type MfmProps = {
 // eslint-disable-next-line import/no-default-export
 export default function(props: MfmProps) {
 	const isNote = props.isNote ?? true;
-	const shouldNyaize = props.nyaize ? props.nyaize === 'account' ? props.author?.isCat : false : false;
-	const shouldMyaize = props.myaize ? props.myaize === 'account' ? props.author?.isSheep : false : false;
+	const shouldNyaize = props.nyaize ? props.nyaize === 'respect' ? props.author?.isCat : false : false;
+	const shouldMyaize = props.myaize ? props.myaize === 'respect' ? props.author?.isSheep : false : false;
 
 	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 	if (props.text == null || props.text === '') return;
@@ -245,6 +246,34 @@ export default function(props: MfmProps) {
 						if (!/^[0-9a-f]{3,6}$/i.test(color)) color = 'f00';
 						style = `background-color: #${color};`;
 						break;
+					}
+					case 'ruby': {
+						if (token.children.length === 1) {
+							const child = token.children[0];
+							const text = child.type === 'text' ? child.props.text : '';
+							return h('ruby', {}, [text.split(' ')[0], h('rt', text.split(' ')[1])]);
+						} else {
+							const rt = token.children.at(-1)!;
+							const text = rt.type === 'text' ? rt.props.text : '';
+							return h('ruby', {}, [...genEl(token.children.slice(0, token.children.length - 1), scale), h('rt', text.trim())]);
+						}
+					}
+					case 'unixtime': {
+						const child = token.children[0];
+						const unixtime = parseInt(child.type === 'text' ? child.props.text : '');
+						return h('span', {
+							style: 'display: inline-block; font-size: 90%; border: solid 1px var(--divider); border-radius: 999px; padding: 4px 10px 4px 6px;',
+						}, [
+							h('i', {
+								class: 'ti ti-clock',
+								style: 'margin-right: 0.25em;',
+							}),
+							h(MkTime, {
+								key: Math.random(),
+								time: unixtime * 1000,
+								mode: 'detail',
+							}),
+						]);
 					}
 				}
 				if (style == null) {
