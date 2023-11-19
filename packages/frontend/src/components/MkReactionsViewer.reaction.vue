@@ -189,7 +189,7 @@ if (!mock) {
 }
 
 .icon {
-	max-width: 150px;
+	max-width: 500px;
 }
 
 .count {
