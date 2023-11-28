@@ -22,16 +22,6 @@ export const packedFlashSchema = {
 			optional: false, nullable: false,
 			format: 'date-time',
 		},
-		userId: {
-			type: 'string',
-			optional: false, nullable: false,
-			format: 'id',
-		},
-		user: {
-			type: 'object',
-			ref: 'UserLite',
-			optional: false, nullable: false,
-		},
 		title: {
 			type: 'string',
 			optional: false, nullable: false,
@@ -42,6 +32,16 @@ export const packedFlashSchema = {
 		},
 		script: {
 			type: 'string',
+			optional: false, nullable: false,
+		},
+		userId: {
+			type: 'string',
+			optional: false, nullable: false,
+			format: 'id',
+		},
+		user: {
+			type: 'object',
+			ref: 'UserLite',
 			optional: false, nullable: false,
 		},
 		likedCount: {

@@ -4,7 +4,7 @@
  */
 
 import type { Config } from '@/config.js';
-import endpoints, { IEndpoint } from '../endpoints.js';
+import endpoints from '../endpoints.js';
 import { errors as basicErrors } from './errors.js';
 import { schemas, convertSchemaToOpenApiSchema } from './schemas.js';
 
@@ -33,17 +33,16 @@ export function genOpenapiSpec(config: Config) {
 			schemas: schemas,
 
 			securitySchemes: {
-				bearerAuth: {
-					type: 'http',
-					scheme: 'bearer',
+				ApiKeyAuth: {
+					type: 'apiKey',
+					in: 'body',
+					name: 'i',
 				},
 			},
 		},
 	};
 
-	// 書き換えたりするのでディープコピーしておく。そのまま編集するとメモリ上の値が汚れて次回以降の出力に影響する
-	const copiedEndpoints = JSON.parse(JSON.stringify(endpoints)) as IEndpoint[];
-	for (const endpoint of copiedEndpoints.filter(ep => !ep.meta.secure)) {
+	for (const endpoint of endpoints.filter(ep => !ep.meta.secure)) {
 		const errors = {} as any;
 
 		if (endpoint.meta.errors) {
@@ -80,13 +79,6 @@ export function genOpenapiSpec(config: Config) {
 			schema.required = [...schema.required ?? [], 'file'];
 		}
 
-		if (schema.required && schema.required.length <= 0) {
-			// 空配列は許可されない
-			schema.required = undefined;
-		}
-
-		const hasBody = (schema.type === 'object' && schema.properties && Object.keys(schema.properties).length >= 1);
-
 		const info = {
 			operationId: endpoint.name,
 			summary: endpoint.name,
@@ -100,19 +92,17 @@ export function genOpenapiSpec(config: Config) {
 			} : {}),
 			...(endpoint.meta.requireCredential ? {
 				security: [{
-					bearerAuth: [],
+					ApiKeyAuth: [],
 				}],
 			} : {}),
-			...(hasBody ? {
-				requestBody: {
-					required: true,
-					content: {
-						[requestType]: {
-							schema,
-						},
+			requestBody: {
+				required: true,
+				content: {
+					[requestType]: {
+						schema,
 					},
 				},
-			} : {}),
+			},
 			responses: {
 				...(endpoint.meta.res ? {
 					'200': {
@@ -128,11 +118,6 @@ export function genOpenapiSpec(config: Config) {
 						description: 'OK (without any results)',
 					},
 				}),
-				...(endpoint.meta.res?.optional === true || endpoint.meta.res?.nullable === true ? {
-					'204': {
-						description: 'OK (without any results)',
-					},
-				} : {}),
 				'400': {
 					description: 'Client error',
 					content: {
@@ -205,7 +190,6 @@ export function genOpenapiSpec(config: Config) {
 		};
 
 		spec.paths['/' + endpoint.name] = {
-			...(endpoint.meta.allowGet ? { get: info } : {}),
 			post: info,
 		};
 	}

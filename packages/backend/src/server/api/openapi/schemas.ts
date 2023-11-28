@@ -7,16 +7,10 @@ import type { Schema } from '@/misc/json-schema.js';
 import { refs } from '@/misc/json-schema.js';
 
 export function convertSchemaToOpenApiSchema(schema: Schema) {
-	// optional, refはスキーマ定義に含まれないので分離しておく
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const { optional, ref, ...res }: any = schema;
+	const res: any = schema;
 
 	if (schema.type === 'object' && schema.properties) {
-		const required = Object.entries(schema.properties).filter(([k, v]) => !v.optional).map(([k]) => k);
-		if (required.length > 0) {
-			// 空配列は許可されない
-			res.required = required;
-		}
+		res.required = Object.entries(schema.properties).filter(([k, v]) => !v.optional).map(([k]) => k);
 
 		for (const k of Object.keys(schema.properties)) {
 			res.properties[k] = convertSchemaToOpenApiSchema(schema.properties[k]);

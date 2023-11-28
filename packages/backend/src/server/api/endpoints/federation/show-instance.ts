@@ -16,9 +16,12 @@ export const meta = {
 	requireCredential: false,
 
 	res: {
-		type: 'object',
-		optional: false, nullable: true,
-		ref: 'FederationInstance',
+		oneOf: [{
+			type: 'object',
+			ref: 'FederationInstance',
+		}, {
+			type: 'null',
+		}],
 	},
 } as const;
 

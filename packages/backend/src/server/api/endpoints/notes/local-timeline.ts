@@ -14,7 +14,7 @@ import { RoleService } from '@/core/RoleService.js';
 import { IdService } from '@/core/IdService.js';
 import { CacheService } from '@/core/CacheService.js';
 import { isUserRelated } from '@/misc/is-user-related.js';
-import { FanoutTimelineService } from '@/core/FanoutTimelineService.js';
+import { FunoutTimelineService } from '@/core/FunoutTimelineService.js';
 import { QueryService } from '@/core/QueryService.js';
 import { MetaService } from '@/core/MetaService.js';
 import { MiLocalUser } from '@/models/User.js';
@@ -69,7 +69,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private activeUsersChart: ActiveUsersChart,
 		private idService: IdService,
 		private cacheService: CacheService,
-		private fanoutTimelineService: FanoutTimelineService,
+		private funoutTimelineService: FunoutTimelineService,
 		private queryService: QueryService,
 		private metaService: MetaService,
 	) {
@@ -107,9 +107,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			let noteIds: string[];
 
 			if (ps.withFiles) {
-				noteIds = await this.fanoutTimelineService.get('localTimelineWithFiles', untilId, sinceId);
+				noteIds = await this.funoutTimelineService.get('localTimelineWithFiles', untilId, sinceId);
 			} else {
-				const [nonReplyNoteIds, replyNoteIds] = await this.fanoutTimelineService.getMulti([
+				const [nonReplyNoteIds, replyNoteIds] = await this.funoutTimelineService.getMulti([
 					'localTimeline',
 					'localTimelineWithReplies',
 				], untilId, sinceId);

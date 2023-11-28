@@ -74,7 +74,7 @@ export const packedDriveFileSchema = {
 		},
 		url: {
 			type: 'string',
-			optional: false, nullable: false,
+			optional: false, nullable: true,
 			format: 'url',
 		},
 		thumbnailUrl: {

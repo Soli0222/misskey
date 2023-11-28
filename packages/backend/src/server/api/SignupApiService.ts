@@ -126,7 +126,7 @@ export class SignupApiService {
 				code: invitationCode,
 			});
 
-			if (ticket == null || ticket.usedById != null) {
+			if (ticket == null) {
 				reply.code(400);
 				return;
 			}

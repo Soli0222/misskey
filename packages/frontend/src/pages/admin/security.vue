@@ -73,13 +73,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<MkSwitch v-model="enableActiveEmailValidation" @update:modelValue="save">
 							<template #label>Enable</template>
 						</MkSwitch>
-						<MkSwitch v-model="enableVerifymailApi" @update:modelValue="save">
-							<template #label>Use Verifymail API</template>
-						</MkSwitch>
-						<MkInput v-model="verifymailAuthKey" @update:modelValue="save">
-							<template #prefix><i class="ti ti-key"></i></template>
-							<template #label>Verifymail API Auth Key</template>
-						</MkInput>
 					</div>
 				</MkFolder>
 
@@ -139,8 +132,6 @@ let setSensitiveFlagAutomatically: boolean = $ref(false);
 let enableSensitiveMediaDetectionForVideos: boolean = $ref(false);
 let enableIpLogging: boolean = $ref(false);
 let enableActiveEmailValidation: boolean = $ref(false);
-let enableVerifymailApi: boolean = $ref(false);
-let verifymailAuthKey: string | null = $ref(null);
 
 async function init() {
 	const meta = await os.api('admin/meta');
@@ -159,8 +150,6 @@ async function init() {
 	enableSensitiveMediaDetectionForVideos = meta.enableSensitiveMediaDetectionForVideos;
 	enableIpLogging = meta.enableIpLogging;
 	enableActiveEmailValidation = meta.enableActiveEmailValidation;
-	enableVerifymailApi = meta.enableVerifymailApi;
-	verifymailAuthKey = meta.verifymailAuthKey;
 }
 
 function save() {
@@ -178,8 +167,6 @@ function save() {
 		enableSensitiveMediaDetectionForVideos,
 		enableIpLogging,
 		enableActiveEmailValidation,
-		enableVerifymailApi,
-		verifymailAuthKey,
 	}).then(() => {
 		fetchInstance();
 	});

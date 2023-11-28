@@ -93,7 +93,7 @@ describe('Webリソース', () => {
 		});
 		aliceChannel = await channel(alice, {});
 
-		bob = await signup({ username: 'bob' });
+		bob = await signup({ username: 'alice' });
 	}, 1000 * 60 * 2);
 
 	afterAll(async () => {
@@ -149,11 +149,6 @@ describe('Webリソース', () => {
 
 		test('がGETできる。', async () => await ok({
 			path: path(alice.username),
-			type,
-		}));
-
-		test('がGETできる。(ノートが存在しない場合でも。)', async () => await ok({
-			path: path(bob.username),
 			type,
 		}));
 

@@ -114,6 +114,7 @@ const props = defineProps<{
 
 			& + article {
 				left: 0;
+				width: 100%;
 			}
 		}
 	}
@@ -123,7 +124,6 @@ const props = defineProps<{
 
 		> .thumbnail {
 			height: 80px;
-			overflow: clip;
 		}
 
 		> article {
