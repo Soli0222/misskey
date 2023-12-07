@@ -124,12 +124,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<button v-if="appearNote.myReaction != null" ref="reactButton" :class="$style.footerButton" class="_button" @click="undoReact(appearNote)">
 					<i class="ti ti-minus"></i>
 				</button>
-				<button v-if="favorited" ref="favButton" :class="$style.footerButton" class="_button" @click="toggleFavorite(false)">
-					<i class="ti ti-star-off"></i>
-				</button>
-				<button v-else ref="favButton" :class="$style.footerButton" class="_button" @click="toggleFavorite(true)">
-					<i class="ti ti-star"></i>
-				</button>
 				<button v-if="defaultStore.state.showClipButtonInNoteFooter" ref="clipButton" :class="$style.footerButton" class="_button" @mousedown="clip()">
 					<i class="ti ti-paperclip"></i>
 				</button>
@@ -245,7 +239,6 @@ const menuButton = shallowRef<HTMLElement>();
 const renoteButton = shallowRef<HTMLElement>();
 const renoteTime = shallowRef<HTMLElement>();
 const reactButton = shallowRef<HTMLElement>();
-const favButton = shallowRef<HTMLElement>();
 const clipButton = shallowRef<HTMLElement>();
 const appearNote = computed(() => isRenote ? note.value.renote as Misskey.entities.Note : note.value);
 const isMyRenote = $i && ($i.id === note.value.userId);
@@ -262,7 +255,6 @@ const translating = ref(false);
 const showTicker = (defaultStore.state.instanceTicker === 'always') || (defaultStore.state.instanceTicker === 'remote' && appearNote.value.user.instance);
 const canRenote = computed(() => ['public', 'home'].includes(appearNote.value.visibility) || (appearNote.value.visibility === 'followers' && appearNote.value.userId === $i.id));
 const renoteCollapsed = ref(defaultStore.state.collapseRenotes && isRenote && (($i && ($i.id === note.value.userId || $i.id === appearNote.value.userId)) || (appearNote.value.myReaction != null)));
-let favorited = ref(false);
 
 function checkMute(note: Misskey.entities.Note, mutedWords: Array<string | string[]> | undefined | null): boolean {
 	if (mutedWords == null) return false;
@@ -290,8 +282,6 @@ provide('react', (reaction: string) => {
 		reaction: reaction,
 	});
 });
-
-checkFav(appearNote);
 
 if (props.mock) {
 	watch(() => props.note, (to) => {
@@ -406,36 +396,6 @@ function undoReact(note): void {
 	os.api('notes/reactions/delete', {
 		noteId: note.id,
 	});
-}
-
-async function checkFav(note) {
-	const result = await os.api('notes/state', {
-		noteId: note.id,
-	});
-	favorited = result.isFavorited;
-}
-
-async function toggleFavorite(favorite: boolean) {
-	if (favorite) {
-		const el = favButton.value as HTMLElement | null | undefined;
-		if (el) {
-			const rect = el.getBoundingClientRect();
-			const x = rect.left + (el.offsetWidth / 2);
-			const y = rect.top + (el.offsetHeight / 2);
-			os.popup(MkRippleEffect, { x, y }, {}, 'end');
-		}
-	}
-	focus();
-	claimAchievement('noteFavorited1');
-
-	try {
-		await os.apiWithDialog(favorite ? 'notes/favorites/create' : 'notes/favorites/delete', {
-			noteId: appearNote.id,
-		});
-		await checkFav(appearNote);
-	} catch (error) {
-		console.error('Error toggleFavorite:', error);
-	}
 }
 
 function onContextmenu(ev: MouseEvent): void {
