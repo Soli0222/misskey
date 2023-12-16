@@ -132,6 +132,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<button v-if="appearNote.myReaction != null" ref="reactButton" class="_button" :class="[$style.noteFooterButton, $style.reacted]" @click="undoReact(appearNote)">
 				<i class="ti ti-minus"></i>
 			</button>
+			<button v-if="favorited" ref="favButton" :class="$style.noteFooterButton" class="_button" @click="toggleFavorite(false)">
+				<i class="ti ti-star-off"></i>
+			</button>
+			<button v-else ref="favButton" :class="$style.noteFooterButton" class="_button" @click="toggleFavorite(true)">
+				<i class="ti ti-star"></i>
+			</button>
 			<button v-if="defaultStore.state.showClipButtonInNoteFooter" ref="clipButton" class="_button" :class="$style.noteFooterButton" @mousedown="clip()">
 				<i class="ti ti-paperclip"></i>
 			</button>
@@ -270,6 +276,7 @@ const renoteButton = shallowRef<HTMLElement>();
 const renoteTime = shallowRef<HTMLElement>();
 const reactButton = shallowRef<HTMLElement>();
 const clipButton = shallowRef<HTMLElement>();
+const favButton = shallowRef<HTMLElement>();
 const appearNote = computed(() => isRenote ? note.value.renote as Misskey.entities.Note : note.value);
 const isMyRenote = $i && ($i.id === note.value.userId);
 const showContent = ref(false);
@@ -283,6 +290,18 @@ const showTicker = (defaultStore.state.instanceTicker === 'always') || (defaultS
 const conversation = ref<Misskey.entities.Note[]>([]);
 const replies = ref<Misskey.entities.Note[]>([]);
 const canRenote = computed(() => ['public', 'home'].includes(appearNote.value.visibility) || appearNote.value.userId === $i.id);
+const favorited = ref(false);
+
+async function checkFav(note): Promise<boolean> {
+	const result = await os.api('notes/state', {
+		noteId: note.id,
+	});
+	return Promise.resolve(result.isFavorited);
+}
+
+checkFav(appearNote.value).then((result) => {
+	favorited.value = result;
+});
 
 const keymap = {
 	'r': () => reply(true),
@@ -438,6 +457,27 @@ function menu(viaKeyboard = false): void {
 
 async function clip() {
 	os.popupMenu(await getNoteClipMenu({ note: note.value, isDeleted }), clipButton.value).then(focus);
+}
+
+async function toggleFavorite(favorite: boolean) {
+	if (favorite) {
+		const el = favButton.value as HTMLElement | null | undefined;
+		if (el) {
+			const rect = el.getBoundingClientRect();
+			const x = rect.left + (el.offsetWidth / 2);
+			const y = rect.top + (el.offsetHeight / 2);
+			os.popup(MkRippleEffect, { x, y }, {}, 'end');
+		}
+	}
+	focus();
+
+	claimAchievement('noteFavorited1');
+	await os.apiWithDialog(favorite ? 'notes/favorites/create' : 'notes/favorites/delete', {
+		noteId: appearNote.value.id,
+	});
+
+	const result = await checkFav(appearNote.value);
+	favorited.value = result;
 }
 
 function showRenoteMenu(viaKeyboard = false): void {
