@@ -74,6 +74,14 @@ export const packedUserLiteSchema = {
 						format: 'url',
 						nullable: false, optional: false,
 					},
+					offsetX: {
+						type: 'number',
+						nullable: false, optional: true,
+					},
+					offsetY: {
+						type: 'number',
+						nullable: false, optional: true,
+					},
 				},
 			},
 		},
@@ -673,6 +681,10 @@ export const packedMeDetailedOnlySchema = {
 					nullable: false, optional: false,
 				},
 				rateLimitFactor: {
+					type: 'number',
+					nullable: false, optional: false,
+				},
+				avatarDecorationLimit: {
 					type: 'number',
 					nullable: false, optional: false,
 				},
