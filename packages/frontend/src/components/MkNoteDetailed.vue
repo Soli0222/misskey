@@ -91,9 +91,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<b>{{ i18n.t('translatedFrom', { x: translation.sourceLang }) }}: </b>
 						<Mfm :text="translation.text" :author="appearNote.user" :nyaize="'respect'" :myaize="'respect'" :emojiUrls="appearNote.emojis"/>
 					</div>
-					<div v-if="denyaize" :class="$style.translation">
-						<Mfm :text="appearNote.text" :author="appearNote.user" :emojiUrls="appearNote.emojis"/>
-					</div>
+				</div>
+				<div v-if="denyaize" :class="$style.translation">
+					<Mfm :text="appearNote.text" :author="appearNote.user" :emojiUrls="appearNote.emojis"/>
 				</div>
 				<div v-if="appearNote.files.length > 0">
 					<MkMediaList :mediaList="appearNote.files"/>
