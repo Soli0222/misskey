@@ -78,6 +78,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 								<Mfm :text="translation.text" :author="appearNote.user" :nyaize="'respect'" :myaize="'respect'" :emojiUrls="appearNote.emojis"/>
 							</div>
 						</div>
+						<div v-if="denyaize" :class="$style.translation">
+							<Mfm :text="appearNote.text" :author="appearNote.user" :emojiUrls="appearNote.emojis"/>
+						</div>
 					</div>
 					<div v-if="appearNote.files.length > 0">
 						<MkMediaList :mediaList="appearNote.files"/>
@@ -129,6 +132,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</button>
 				<button v-else ref="favButton" :class="$style.footerButton" class="_button" @click="toggleFavorite(true)">
 					<i class="ti ti-star"></i>
+				</button>
+				<button ref="denyaizeButton" :class="$style.footerButton" class="_button" @click="toggleDeNyaize()">
+					<i class="ti ti-brush"></i>
 				</button>
 				<button v-if="defaultStore.state.showClipButtonInNoteFooter" ref="clipButton" :class="$style.footerButton" class="_button" @mousedown="clip()">
 					<i class="ti ti-paperclip"></i>
@@ -264,6 +270,7 @@ const showTicker = (defaultStore.state.instanceTicker === 'always') || (defaultS
 const canRenote = computed(() => ['public', 'home'].includes(appearNote.value.visibility) || (appearNote.value.visibility === 'followers' && appearNote.value.userId === $i.id));
 const renoteCollapsed = ref(defaultStore.state.collapseRenotes && isRenote && (($i && ($i.id === note.value.userId || $i.id === appearNote.value.userId)) || (appearNote.value.myReaction != null)));
 const favorited = ref(false);
+const denyaize = ref(false);
 
 function checkMute(note: Misskey.entities.Note, mutedWords: Array<string | string[]> | undefined | null): boolean {
 	if (mutedWords == null) return false;
@@ -481,6 +488,10 @@ async function toggleFavorite(favorite: boolean) {
 
 	const result = await checkFav(appearNote.value);
 	favorited.value = result;
+}
+
+async function toggleDeNyaize() {
+	denyaize.value = !denyaize.value;
 }
 
 function showRenoteMenu(viaKeyboard = false): void {
