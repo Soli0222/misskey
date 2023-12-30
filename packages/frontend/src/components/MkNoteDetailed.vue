@@ -91,6 +91,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<b>{{ i18n.t('translatedFrom', { x: translation.sourceLang }) }}: </b>
 						<Mfm :text="translation.text" :author="appearNote.user" :nyaize="'respect'" :myaize="'respect'" :emojiUrls="appearNote.emojis"/>
 					</div>
+					<div v-if="denyaize" :class="$style.translation">
+						<Mfm :text="appearNote.text" :author="appearNote.user" :emojiUrls="appearNote.emojis"/>
+					</div>
 				</div>
 				<div v-if="appearNote.files.length > 0">
 					<MkMediaList :mediaList="appearNote.files"/>
@@ -137,6 +140,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</button>
 			<button v-else ref="favButton" :class="$style.noteFooterButton" class="_button" @click="toggleFavorite(true)">
 				<i class="ti ti-star"></i>
+			</button>
+			<button ref="denyaizeButton" :class="$style.noteFooterButton" class="_button" @click="toggleDeNyaize()">
+				<i class="ti ti-brush"></i>
 			</button>
 			<button v-if="defaultStore.state.showClipButtonInNoteFooter" ref="clipButton" class="_button" :class="$style.noteFooterButton" @mousedown="clip()">
 				<i class="ti ti-paperclip"></i>
@@ -290,6 +296,7 @@ const conversation = ref<Misskey.entities.Note[]>([]);
 const replies = ref<Misskey.entities.Note[]>([]);
 const canRenote = computed(() => ['public', 'home'].includes(appearNote.value.visibility) || appearNote.value.userId === $i.id);
 const favorited = ref(false);
+const denyaize = ref(false);
 
 async function checkFav(note): Promise<boolean> {
 	const result = await os.api('notes/state', {
@@ -477,6 +484,10 @@ async function toggleFavorite(favorite: boolean) {
 
 	const result = await checkFav(appearNote.value);
 	favorited.value = result;
+}
+
+async function toggleDeNyaize() {
+	denyaize.value = !denyaize.value;
 }
 
 function showRenoteMenu(viaKeyboard = false): void {
