@@ -861,6 +861,7 @@ export interface Locale {
     "whatIsNew": string;
     "translate": string;
     "translatedFrom": string;
+    "denyaize": string;
     "accountDeletionInProgress": string;
     "usernameInfo": string;
     "aiChanMode": string;

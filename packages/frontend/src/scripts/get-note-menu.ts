@@ -124,6 +124,7 @@ export function getNoteMenu(props: {
 	menuButton: Ref<HTMLElement>;
 	translation: Ref<Misskey.entities.NotesTranslateResponse | null>;
 	translating: Ref<boolean>;
+	denyaize: Ref<boolean>;
 	isDeleted: Ref<boolean>;
 	currentClip?: Misskey.entities.Clip;
 }) {
@@ -251,6 +252,10 @@ export function getNoteMenu(props: {
 		props.translation.value = res;
 	}
 
+	async function toggleDeNyaize() {
+		props.denyaize.value = !props.denyaize.value;
+	}
+
 	let menu: MenuItem[];
 	if ($i) {
 		const statePromise = os.api('notes/state', {
@@ -290,7 +295,11 @@ export function getNoteMenu(props: {
 				icon: 'ti ti-language-hiragana',
 				text: i18n.ts.translate,
 				action: translate,
-			} : undefined,
+			} : undefined, {
+				icon: 'ti ti-brush',
+				text: i18n.ts.denyaize,
+				action: toggleDeNyaize,
+			},
 			{ type: 'divider' },
 			statePromise.then(state => state.isFavorited ? {
 				icon: 'ti ti-star-off',
@@ -389,7 +398,7 @@ export function getNoteMenu(props: {
 	}
 
 	if (noteActions.length > 0) {
-		menu = menu.concat([{ type: "divider" }, ...noteActions.map(action => ({
+		menu = menu.concat([{ type: 'divider' }, ...noteActions.map(action => ({
 			icon: 'ti ti-plug',
 			text: action.title,
 			action: () => {
@@ -399,7 +408,7 @@ export function getNoteMenu(props: {
 	}
 
 	if (defaultStore.state.devMode) {
-		menu = menu.concat([{ type: "divider" }, {
+		menu = menu.concat([{ type: 'divider' }, {
 			icon: 'ti ti-id',
 			text: i18n.ts.copyNoteId,
 			action: () => {
