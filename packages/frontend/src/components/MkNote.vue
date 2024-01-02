@@ -133,9 +133,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<button v-else ref="favButton" :class="$style.footerButton" class="_button" @click="toggleFavorite(true)">
 					<i class="ti ti-star"></i>
 				</button>
-				<button ref="denyaizeButton" :class="$style.footerButton" class="_button" @click="toggleDeNyaize()">
-					<i class="ti ti-brush"></i>
-				</button>
 				<button v-if="defaultStore.state.showClipButtonInNoteFooter" ref="clipButton" :class="$style.footerButton" class="_button" @mousedown="clip()">
 					<i class="ti ti-paperclip"></i>
 				</button>
@@ -445,7 +442,7 @@ function onContextmenu(ev: MouseEvent): void {
 		ev.preventDefault();
 		react();
 	} else {
-		const { menu, cleanup } = getNoteMenu({ note: note.value, translating, translation, menuButton, isDeleted, currentClip: currentClip?.value });
+		const { menu, cleanup } = getNoteMenu({ note: note.value, translating, translation, denyaize, menuButton, isDeleted, currentClip: currentClip?.value });
 		os.contextMenu(menu, ev).then(focus).finally(cleanup);
 	}
 }
@@ -455,7 +452,7 @@ function menu(viaKeyboard = false): void {
 		return;
 	}
 
-	const { menu, cleanup } = getNoteMenu({ note: note.value, translating, translation, menuButton, isDeleted, currentClip: currentClip?.value });
+	const { menu, cleanup } = getNoteMenu({ note: note.value, translating, translation, denyaize, menuButton, isDeleted, currentClip: currentClip?.value });
 	os.popupMenu(menu, menuButton.value, {
 		viaKeyboard,
 	}).then(focus).finally(cleanup);
@@ -488,10 +485,6 @@ async function toggleFavorite(favorite: boolean) {
 
 	const result = await checkFav(appearNote.value);
 	favorited.value = result;
-}
-
-async function toggleDeNyaize() {
-	denyaize.value = !denyaize.value;
 }
 
 function showRenoteMenu(viaKeyboard = false): void {
