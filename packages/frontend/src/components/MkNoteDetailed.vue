@@ -297,7 +297,7 @@ const favorited = ref(false);
 const denyaize = ref(false);
 
 async function checkFav(note): Promise<boolean> {
-	const result = await os.api('notes/state', {
+	const result = await misskeyApi('notes/state', {
 		noteId: note.id,
 	});
 	return Promise.resolve(result.isFavorited);
