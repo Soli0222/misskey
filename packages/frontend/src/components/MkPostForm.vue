@@ -119,12 +119,13 @@ import { extractMentions } from '@/scripts/extract-mentions.js';
 import { formatTimeString } from '@/scripts/format-time-string.js';
 import { Autocomplete } from '@/scripts/autocomplete.js';
 import * as os from '@/os.js';
+import { misskeyApi } from '@/scripts/misskey-api.js';
 import { selectFiles } from '@/scripts/select-file.js';
 import { defaultStore, notePostInterruptors, postFormActions } from '@/store.js';
 import MkInfo from '@/components/MkInfo.vue';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
-import { $i, notesCount, incNotesCount, getAccounts, openAccountMenu as openAccountMenu_ } from '@/account.js';
+import { signinRequired, notesCount, incNotesCount, getAccounts, openAccountMenu as openAccountMenu_ } from '@/account.js';
 import { uploadFile } from '@/scripts/upload.js';
 import { deepClone } from '@/scripts/clone.js';
 import MkRippleEffect from '@/components/MkRippleEffect.vue';
@@ -133,7 +134,9 @@ import { claimAchievement } from '@/scripts/achievements.js';
 import { emojiPicker } from '@/scripts/emoji-picker.js';
 import { mfmFunctionPicker } from '@/scripts/mfm-function-picker.js';
 
-	const modal = inject('modal');
+const $i = signinRequired();
+
+const modal = inject('modal');
 
 const props = withDefaults(defineProps<{
 	reply?: Misskey.entities.Note;
@@ -210,16 +213,16 @@ const textAreaReadOnly = ref(false);
 const draftKey = computed((): string => {
 	let key = props.channel ? `channel:${props.channel.id}` : '';
 
-		if (props.renote) {
-			key += `renote:${props.renote.id}`;
-		} else if (props.reply) {
-			key += `reply:${props.reply.id}`;
-		} else {
-			key += `note:${$i.id}`;
-		}
+	if (props.renote) {
+		key += `renote:${props.renote.id}`;
+	} else if (props.reply) {
+		key += `reply:${props.reply.id}`;
+	} else {
+		key += `note:${$i.id}`;
+	}
 
-		return key;
-	});
+	return key;
+});
 
 const placeholder = computed((): string => {
 	if (props.renote) {
@@ -290,19 +293,19 @@ if (props.reply && (props.reply.user.username !== $i.username || (props.reply.us
 	text.value = `@${props.reply.user.username}${props.reply.user.host != null ? '@' + toASCII(props.reply.user.host) : ''} `;
 }
 
-	if (props.reply && props.reply.text != null) {
-		const ast = mfm.parse(props.reply.text);
-		const otherHost = props.reply.user.host;
+if (props.reply && props.reply.text != null) {
+	const ast = mfm.parse(props.reply.text);
+	const otherHost = props.reply.user.host;
 
-		for (const x of extractMentions(ast)) {
-			const mention = x.host ?
-				`@${x.username}@${toASCII(x.host)}` :
-				(otherHost == null || otherHost === host) ?
-					`@${x.username}` :
-					`@${x.username}@${toASCII(otherHost)}`;
+	for (const x of extractMentions(ast)) {
+		const mention = x.host ?
+			`@${x.username}@${toASCII(x.host)}` :
+			(otherHost == null || otherHost === host) ?
+				`@${x.username}` :
+				`@${x.username}@${toASCII(otherHost)}`;
 
-			// 自分は除外
-			if ($i.username === x.username && (x.host == null || x.host === host)) continue;
+		// 自分は除外
+		if ($i.username === x.username && (x.host == null || x.host === host)) continue;
 
 		// 重複は除外
 		if (text.value.includes(`${mention} `)) continue;
@@ -311,7 +314,7 @@ if (props.reply && (props.reply.user.username !== $i.username || (props.reply.us
 	}
 }
 
-if ($i?.isSilenced && visibility.value === 'public') {
+if ($i.isSilenced && visibility.value === 'public') {
 	visibility.value = 'home';
 }
 
@@ -332,20 +335,20 @@ if (props.reply && ['home', 'followers', 'specified'].includes(props.reply.visib
 
 	if (visibility.value === 'specified') {
 		if (props.reply.visibleUserIds) {
-			os.api('users/show', {
+			misskeyApi('users/show', {
 				userIds: props.reply.visibleUserIds.filter(uid => uid !== $i.id && uid !== props.reply.userId),
 			}).then(users => {
 				users.forEach(pushVisibleUser);
 			});
 		}
 
-			if (props.reply.userId !== $i.id) {
-				os.api('users/show', { userId: props.reply.userId }).then(user => {
-					pushVisibleUser(user);
-				});
-			}
+		if (props.reply.userId !== $i.id) {
+			misskeyApi('users/show', { userId: props.reply.userId }).then(user => {
+				pushVisibleUser(user);
+			});
 		}
 	}
+}
 
 if (props.specified) {
 	visibility.value = 'specified';
@@ -387,7 +390,7 @@ function addMissingMention() {
 
 	for (const x of extractMentions(ast)) {
 		if (!visibleUsers.value.some(u => (u.username === x.username) && (u.host === x.host))) {
-			os.api('users/show', { username: x.username, host: x.host }).then(user => {
+			misskeyApi('users/show', { username: x.username, host: x.host }).then(user => {
 				visibleUsers.value.push(user);
 			});
 		}
@@ -464,7 +467,7 @@ function setVisibility() {
 
 	os.popup(defineAsyncComponent(() => import('@/components/MkVisibilityPicker.vue')), {
 		currentVisibility: visibility.value,
-		isSilenced: $i?.isSilenced,
+		isSilenced: $i.isSilenced,
 		localOnly: localOnly.value,
 		src: visibilityButton.value,
 	}, {
@@ -484,7 +487,7 @@ async function toggleLocalOnly() {
 		return;
 	}
 
-		const neverShowInfo = miLocalStorage.getItem('neverShowLocalOnlyInfo');
+	const neverShowInfo = miLocalStorage.getItem('neverShowLocalOnlyInfo');
 
 	if (!localOnly.value && neverShowInfo !== 'true') {
 		const confirm = await os.actions({
@@ -511,13 +514,13 @@ async function toggleLocalOnly() {
 		if (confirm.canceled) return;
 		if (confirm.result === 'no') return;
 
-			if (confirm.result === 'neverShow') {
-				miLocalStorage.setItem('neverShowLocalOnlyInfo', 'true');
-			}
+		if (confirm.result === 'neverShow') {
+			miLocalStorage.setItem('neverShowLocalOnlyInfo', 'true');
 		}
-
-		localOnly.value = !localOnly.value;
 	}
+
+	localOnly.value = !localOnly.value;
+}
 
 async function toggleCircle() {
 	if (props.channel) {
@@ -556,9 +559,9 @@ function pushVisibleUser(user) {
 	}
 }
 
-	function addVisibleUser() {
-		os.selectUser().then(user => {
-			pushVisibleUser(user);
+function addVisibleUser() {
+	os.selectUser().then(user => {
+		pushVisibleUser(user);
 
 		if (!text.value.toLowerCase().includes(`@${user.username.toLowerCase()}`)) {
 			text.value = `@${Misskey.acct.toString(user)} ${text.value}`;
@@ -603,7 +606,7 @@ async function onPaste(ev: ClipboardEvent) {
 		}
 	}
 
-		const paste = ev.clipboardData.getData('text');
+	const paste = ev.clipboardData.getData('text');
 
 	if (!props.renote && !quoteId.value && paste.startsWith(url + '/notes/')) {
 		ev.preventDefault();
@@ -659,12 +662,12 @@ function onDragleave(ev) {
 function onDrop(ev): void {
 	draghover.value = false;
 
-		// ファイルだったら
-		if (ev.dataTransfer.files.length > 0) {
-			ev.preventDefault();
-			for (const x of Array.from(ev.dataTransfer.files)) upload(x);
-			return;
-		}
+	// ファイルだったら
+	if (ev.dataTransfer.files.length > 0) {
+		ev.preventDefault();
+		for (const x of Array.from(ev.dataTransfer.files)) upload(x);
+		return;
+	}
 
 	//#region ドライブのファイル
 	const driveFile = ev.dataTransfer.getData(_DATA_TRANSFER_DRIVE_FILE_);
@@ -694,16 +697,16 @@ function saveDraft() {
 		},
 	};
 
-		miLocalStorage.setItem('drafts', JSON.stringify(draftData));
-	}
+	miLocalStorage.setItem('drafts', JSON.stringify(draftData));
+}
 
-	function deleteDraft() {
-		const draftData = JSON.parse(miLocalStorage.getItem('drafts') ?? '{}');
+function deleteDraft() {
+	const draftData = JSON.parse(miLocalStorage.getItem('drafts') ?? '{}');
 
 	delete draftData[draftKey.value];
 
-		miLocalStorage.setItem('drafts', JSON.stringify(draftData));
-	}
+	miLocalStorage.setItem('drafts', JSON.stringify(draftData));
+}
 
 async function post(ev?: MouseEvent) {
 	if (useCw.value && (cw.value == null || cw.value.trim() === '')) {
@@ -784,18 +787,18 @@ async function post(ev?: MouseEvent) {
 		}
 	}
 
-		// plugin
-		if (notePostInterruptors.length > 0) {
-			for (const interruptor of notePostInterruptors) {
+	// plugin
+	if (notePostInterruptors.length > 0) {
+		for (const interruptor of notePostInterruptors) {
 			try {
-					postData = await interruptor.handler(deepClone(postData));
+				postData = await interruptor.handler(deepClone(postData));
 			} catch (err) {
 				console.error(err);
 			}
-			}
 		}
+	}
 
-		let token = undefined;
+	let token = undefined;
 
 	if (postAccount.value) {
 		const storedAccounts = await getAccounts();
@@ -803,7 +806,7 @@ async function post(ev?: MouseEvent) {
 	}
 
 	posting.value = true;
-	os.api('notes/create', postData, token).then(() => {
+	misskeyApi('notes/create', postData, token).then(() => {
 		if (props.freezeAfterPosted) {
 			posted.value = true;
 		} else {
@@ -820,9 +823,9 @@ async function post(ev?: MouseEvent) {
 			posting.value = false;
 			postAccount.value = null;
 
-				incNotesCount();
-				if (notesCount === 1) {
-					claimAchievement('notes1');
+			incNotesCount();
+			if (notesCount === 1) {
+				claimAchievement('notes1');
 			}
 			const text = postData.text ?? '';
 			const lowerCase = text.toLowerCase();
@@ -845,9 +848,9 @@ async function post(ev?: MouseEvent) {
 				claimAchievement('brainDiver');
 			}
 
-				if (props.renote && (props.renote.userId === $i.id) && text.length > 0) {
-					claimAchievement('selfQuote');
-				}
+			if (props.renote && (props.renote.userId === $i.id) && text.length > 0) {
+				claimAchievement('selfQuote');
+			}
 
 			const date = new Date();
 			const h = date.getHours();
@@ -869,9 +872,9 @@ async function post(ev?: MouseEvent) {
 	});
 }
 
-	function cancel() {
-		emit('cancel');
-	}
+function cancel() {
+	emit('cancel');
+}
 
 function insertMention() {
 	os.selectUser().then(user => {
@@ -936,14 +939,14 @@ function openAccountMenu(ev: MouseEvent) {
 	}, ev);
 }
 
-	onMounted(() => {
-		if (props.autofocus) {
-			focus();
+onMounted(() => {
+	if (props.autofocus) {
+		focus();
 
-			nextTick(() => {
-				focus();
-			});
-		}
+		nextTick(() => {
+			focus();
+		});
+	}
 
 	// TODO: detach when unmount
 	new Autocomplete(textareaEl.value, text);
@@ -987,14 +990,14 @@ function openAccountMenu(ev: MouseEvent) {
 			quoteId.value = init.renote ? init.renote.id : null;
 		}
 
-			nextTick(() => watchForDraft());
-		});
+		nextTick(() => watchForDraft());
 	});
+});
 
-	defineExpose({
-		clear,
-	});
-	</script>
+defineExpose({
+	clear,
+});
+</script>
 
 	<style lang="scss" module>
 	.root {
