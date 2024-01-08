@@ -1660,6 +1660,15 @@ export interface Locale {
                 "title": string;
                 "description": string;
             };
+            "_bubbleGameExplodingHead": {
+                "title": string;
+                "description": string;
+            };
+            "_bubbleGameDoubleExplodingHead": {
+                "title": string;
+                "description": string;
+                "flavor": string;
+            };
         };
     };
     "_role": {
