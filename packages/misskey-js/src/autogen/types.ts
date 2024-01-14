@@ -2,8 +2,8 @@
 /* eslint @typescript-eslint/no-explicit-any: 0 */
 
 /*
- * version: 2023.12.2
- * generatedAt: 2024-01-13T04:31:38.633Z
+ * version: 2023.12.2-psr.6.1.4
+ * generatedAt: 2024-01-14T10:54:02.668Z
  */
 
 /**
@@ -3522,6 +3522,7 @@ export type components = {
         }[];
       isBot?: boolean;
       isCat?: boolean;
+      isSheep?: boolean;
       instance?: {
         name: string | null;
         softwareName: string | null;
@@ -18119,6 +18120,7 @@ export type operations = {
           preventAiLearning?: boolean;
           isBot?: boolean;
           isCat?: boolean;
+          isSheep?: boolean;
           injectFeaturedNote?: boolean;
           receiveAnnouncementEmail?: boolean;
           alwaysMarkNsfw?: boolean;
