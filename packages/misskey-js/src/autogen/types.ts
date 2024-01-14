@@ -2,8 +2,8 @@
 /* eslint @typescript-eslint/no-explicit-any: 0 */
 
 /*
- * version: 2023.12.2-psr.6.1.4
- * generatedAt: 2024-01-14T10:54:02.668Z
+ * version: 2023.12.2-psr.6.1.5
+ * generatedAt: 2024-01-14T15:20:39.156Z
  */
 
 /**
