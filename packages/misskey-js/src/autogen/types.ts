@@ -2,8 +2,8 @@
 /* eslint @typescript-eslint/no-explicit-any: 0 */
 
 /*
- * version: 2023.12.2
- * generatedAt: 2024-01-07T15:22:15.494Z
+ * version: 2023.12.2-psr.6.1.4
+ * generatedAt: 2024-01-14T10:54:02.668Z
  */
 
 /**
@@ -3447,6 +3447,31 @@ export type paths = {
      */
     post: operations['retention'];
   };
+  '/bubble-game/register': {
+    /**
+     * bubble-game/register
+     * @description No description provided.
+     *
+     * **Credential required**: *Yes* / **Permission**: *write:account*
+     */
+    post: operations['bubble-game/register'];
+  };
+  '/bubble-game/ranking': {
+    /**
+     * bubble-game/ranking
+     * @description No description provided.
+     *
+     * **Credential required**: *No*
+     */
+    get: operations['bubble-game/ranking'];
+    /**
+     * bubble-game/ranking
+     * @description No description provided.
+     *
+     * **Credential required**: *No*
+     */
+    post: operations['bubble-game/ranking'];
+  };
 };
 
 export type webhooks = Record<string, never>;
@@ -3497,6 +3522,7 @@ export type components = {
         }[];
       isBot?: boolean;
       isCat?: boolean;
+      isSheep?: boolean;
       instance?: {
         name: string | null;
         softwareName: string | null;
@@ -3791,7 +3817,7 @@ export type components = {
       fileIds?: string[];
       files?: components['schemas']['DriveFile'][];
       tags?: string[];
-      poll?: Record<string, unknown> | null;
+      poll?: Record<string, never> | null;
       /**
        * Format: id
        * @example xxxxxxxxxx
@@ -3814,7 +3840,7 @@ export type components = {
       url?: string;
       reactionAndUserPairCache?: string[];
       clippedCount?: number;
-      myReaction?: Record<string, unknown> | null;
+      myReaction?: Record<string, never> | null;
     };
     NoteReaction: {
       /**
@@ -18094,6 +18120,7 @@ export type operations = {
           preventAiLearning?: boolean;
           isBot?: boolean;
           isCat?: boolean;
+          isSheep?: boolean;
           injectFeaturedNote?: boolean;
           receiveAnnouncementEmail?: boolean;
           alwaysMarkNsfw?: boolean;
@@ -25362,6 +25389,127 @@ export type operations = {
       200: {
         content: {
           'application/json': unknown;
+        };
+      };
+      /** @description Client error */
+      400: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Authentication error */
+      401: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Forbidden error */
+      403: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description I'm Ai */
+      418: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  /**
+   * bubble-game/register
+   * @description No description provided.
+   *
+   * **Credential required**: *Yes* / **Permission**: *write:account*
+   */
+  'bubble-game/register': {
+    requestBody: {
+      content: {
+        'application/json': {
+          score: number;
+          seed: string;
+          logs: unknown[];
+          gameMode: string;
+          gameVersion: number;
+        };
+      };
+    };
+    responses: {
+      /** @description OK (with results) */
+      200: {
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Client error */
+      400: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Authentication error */
+      401: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Forbidden error */
+      403: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description I'm Ai */
+      418: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description To many requests */
+      429: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  /**
+   * bubble-game/ranking
+   * @description No description provided.
+   *
+   * **Credential required**: *No*
+   */
+  'bubble-game/ranking': {
+    requestBody: {
+      content: {
+        'application/json': {
+          gameMode: string;
+        };
+      };
+    };
+    responses: {
+      /** @description OK (with results) */
+      200: {
+        content: {
+          'application/json': {
+              /** Format: misskey:id */
+              id: string;
+              score: number;
+              user: components['schemas']['UserLite'];
+            }[];
         };
       };
       /** @description Client error */
