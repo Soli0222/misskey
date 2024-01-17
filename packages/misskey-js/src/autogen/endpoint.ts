@@ -1,6 +1,6 @@
 /*
  * version: 2023.12.2-psr.6.1.5
- * generatedAt: 2024-01-14T15:20:39.225Z
+ * generatedAt: 2024-01-17T18:41:14.734Z
  */
 
 import type {
