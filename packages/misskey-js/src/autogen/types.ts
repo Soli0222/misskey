@@ -2,8 +2,8 @@
 /* eslint @typescript-eslint/no-explicit-any: 0 */
 
 /*
- * version: 2023.12.2
- * generatedAt: 2024-01-19T11:00:07.077Z
+ * version: 2024.2.0-beta.2
+ * generatedAt: 2024-01-22T07:11:08.327Z
  */
 
 /**
@@ -4466,12 +4466,10 @@ export type components = {
       createdAt: string;
       /** Format: date-time */
       startedAt: string | null;
+      /** Format: date-time */
+      endedAt: string | null;
       isStarted: boolean;
       isEnded: boolean;
-      form1: Record<string, never> | null;
-      form2: Record<string, never> | null;
-      user1Ready: boolean;
-      user2Ready: boolean;
       /** Format: id */
       user1Id: string;
       /** Format: id */
@@ -4482,12 +4480,15 @@ export type components = {
       winnerId: string | null;
       winner: components['schemas']['User'] | null;
       /** Format: id */
-      surrendered: string | null;
+      surrenderedUserId: string | null;
+      /** Format: id */
+      timeoutUserId: string | null;
       black: number | null;
       bw: string;
       isLlotheo: boolean;
       canPutEverywhere: boolean;
       loopedBoard: boolean;
+      timeLimitForEachTurn: number;
     };
     ReversiGameDetailed: {
       /** Format: id */
@@ -4496,6 +4497,8 @@ export type components = {
       createdAt: string;
       /** Format: date-time */
       startedAt: string | null;
+      /** Format: date-time */
+      endedAt: string | null;
       isStarted: boolean;
       isEnded: boolean;
       form1: Record<string, never> | null;
@@ -4512,17 +4515,16 @@ export type components = {
       winnerId: string | null;
       winner: components['schemas']['User'] | null;
       /** Format: id */
-      surrendered: string | null;
+      surrenderedUserId: string | null;
+      /** Format: id */
+      timeoutUserId: string | null;
       black: number | null;
       bw: string;
       isLlotheo: boolean;
       canPutEverywhere: boolean;
       loopedBoard: boolean;
-      logs: {
-          at: number;
-          color: boolean;
-          pos: number;
-        }[];
+      timeLimitForEachTurn: number;
+      logs: unknown[][];
       map: string[];
     };
   };
