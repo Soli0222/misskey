@@ -2,8 +2,8 @@
 /* eslint @typescript-eslint/no-explicit-any: 0 */
 
 /*
- * version: 2024.2.0-beta.2
- * generatedAt: 2024-01-22T07:11:08.327Z
+ * version: 2024.2.0-beta.3-psr.6.1.7
+ * generatedAt: 2024-01-23T16:38:58.468Z
  */
 
 /**
@@ -25619,6 +25619,8 @@ export type operations = {
       content: {
         'application/json': {
           gameMode: string;
+          /** @default false */
+          alldata?: boolean;
         };
       };
     };

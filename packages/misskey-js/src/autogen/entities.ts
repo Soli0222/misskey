@@ -1,6 +1,6 @@
 /*
- * version: 2024.2.0-beta.2
- * generatedAt: 2024-01-22T07:11:08.408Z
+ * version: 2024.2.0-beta.3-psr.6.1.7
+ * generatedAt: 2024-01-23T16:38:58.538Z
  */
 
 import { operations } from './types.js';
