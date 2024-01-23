@@ -45,7 +45,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<div :class="$style.frame">
 					<div :class="$style.frameInner">
 						<div class="_gaps_s" style="padding: 16px;">
-							<div><b>{{ i18n.tsx.lastNDays({ n: 7 }) }} {{ i18n.ts.ranking }}</b> ({{ gameMode }})</div>
+							<div><b>{{ gameMode }} {{ i18n.ts.ranking }}</b></div>
+							<MkTab v-model="tab" style="margin-bottom: var(--margin);">
+								<option value="weekly">{{ i18n.tsx.lastNDays({ n: 7 }) }}</option>
+								<option value="alldays">{{ i18n.ts.allDays }}</option>
+							</MkTab>
 							<div v-if="ranking" class="_gaps_s">
 								<div v-for="r in ranking" :key="r.id" :class="$style.rankingRecord">
 									<MkAvatar :link="true" style="width: 24px; height: 24px; margin-right: 4px;" :user="r.user"/>
@@ -93,15 +97,23 @@ import MkButton from '@/components/MkButton.vue';
 import { i18n } from '@/i18n.js';
 import MkSelect from '@/components/MkSelect.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
+import MkTab from '@/components/MkTab.vue';
 import { misskeyApiGet } from '@/scripts/misskey-api.js';
 
 const gameMode = ref<'normal' | 'square' | 'yen' | 'sweets' | 'space'>('normal');
 const gameStarted = ref(false);
 const mute = ref(false);
 const ranking = ref(null);
+const tab = ref<'weekly' | 'alldays'>('weekly');
 
-watch(gameMode, async () => {
-	ranking.value = await misskeyApiGet('bubble-game/ranking', { gameMode: gameMode.value });
+watch([gameMode, tab], async () => {
+	let requestData = { gameMode: gameMode.value };
+
+	if (tab.value === 'alldays') {
+		requestData.alldata = true;
+	}
+
+	ranking.value = await misskeyApiGet('bubble-game/ranking', requestData);
 }, { immediate: true });
 
 function getScoreUnit(gameMode: string) {

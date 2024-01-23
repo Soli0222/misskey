@@ -4833,6 +4833,10 @@ export interface Locale extends ILocale {
      */
     "lastNDays": ParameterizedString<"n">;
     /**
+     * 全期間
+     */
+    "allDays": string;
+    /**
      * タイトルへ
      */
     "backToTitle": string;
