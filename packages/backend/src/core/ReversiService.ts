@@ -7,7 +7,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import * as Redis from 'ioredis';
 import { ModuleRef } from '@nestjs/core';
 import * as Reversi from 'misskey-reversi';
-import { IsNull } from 'typeorm';
+import { IsNull, LessThan, MoreThan } from 'typeorm';
 import type {
 	MiReversiGame,
 	ReversiGamesRepository,
@@ -24,7 +24,7 @@ import { Serialized } from '@/types.js';
 import { ReversiGameEntityService } from './entities/ReversiGameEntityService.js';
 import type { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 
-const MATCHING_TIMEOUT_MS = 1000 * 15; // 15sec
+const INVITATION_TIMEOUT_MS = 1000 * 20; // 20sec
 
 @Injectable()
 export class ReversiService implements OnApplicationShutdown, OnModuleInit {
@@ -89,14 +89,30 @@ export class ReversiService implements OnApplicationShutdown, OnModuleInit {
 	}
 
 	@bindThis
-	public async matchSpecificUser(me: MiUser, targetUser: MiUser): Promise<MiReversiGame | null> {
+	public async matchSpecificUser(me: MiUser, targetUser: MiUser, multiple = false): Promise<MiReversiGame | null> {
 		if (targetUser.id === me.id) {
 			throw new Error('You cannot match yourself.');
 		}
 
+		if (!multiple) {
+			// 既にマッチしている対局が無いか探す(3分以内)
+			const games = await this.reversiGamesRepository.find({
+				where: [
+					{ id: MoreThan(this.idService.gen(Date.now() - 1000 * 60 * 3)), user1Id: me.id, user2Id: targetUser.id, isStarted: false },
+					{ id: MoreThan(this.idService.gen(Date.now() - 1000 * 60 * 3)), user1Id: targetUser.id, user2Id: me.id, isStarted: false },
+				],
+				relations: ['user1', 'user2'],
+				order: { id: 'DESC' },
+			});
+			if (games.length > 0) {
+				return games[0];
+			}
+		}
+
+		//#region 相手から既に招待されてないか確認
 		const invitations = await this.redisClient.zrange(
 			`reversi:matchSpecific:${me.id}`,
-			Date.now() - MATCHING_TIMEOUT_MS,
+			Date.now() - INVITATION_TIMEOUT_MS,
 			'+inf',
 			'BYSCORE');
 
@@ -106,23 +122,42 @@ export class ReversiService implements OnApplicationShutdown, OnModuleInit {
 			const game = await this.matched(targetUser.id, me.id);
 
 			return game;
-		} else {
-			this.redisClient.zadd(`reversi:matchSpecific:${targetUser.id}`, Date.now(), me.id);
-
-			this.globalEventService.publishReversiStream(targetUser.id, 'invited', {
-				user: await this.userEntityService.pack(me, targetUser),
-			});
-
-			return null;
 		}
+		//#endregion
+
+		const redisPipeline = this.redisClient.pipeline();
+		redisPipeline.zadd(`reversi:matchSpecific:${targetUser.id}`, Date.now(), me.id);
+		redisPipeline.expire(`reversi:matchSpecific:${targetUser.id}`, 120, 'NX');
+		await redisPipeline.exec();
+
+		this.globalEventService.publishReversiStream(targetUser.id, 'invited', {
+			user: await this.userEntityService.pack(me, targetUser),
+		});
+
+		return null;
 	}
 
 	@bindThis
-	public async matchAnyUser(me: MiUser): Promise<MiReversiGame | null> {
+	public async matchAnyUser(me: MiUser, multiple = false): Promise<MiReversiGame | null> {
+		if (!multiple) {
+			// 既にマッチしている対局が無いか探す(3分以内)
+			const games = await this.reversiGamesRepository.find({
+				where: [
+					{ id: MoreThan(this.idService.gen(Date.now() - 1000 * 60 * 3)), user1Id: me.id, isStarted: false },
+					{ id: MoreThan(this.idService.gen(Date.now() - 1000 * 60 * 3)), user2Id: me.id, isStarted: false },
+				],
+				relations: ['user1', 'user2'],
+				order: { id: 'DESC' },
+			});
+			if (games.length > 0) {
+				return games[0];
+			}
+		}
+
 		//#region まず自分宛ての招待を探す
 		const invitations = await this.redisClient.zrange(
 			`reversi:matchSpecific:${me.id}`,
-			Date.now() - MATCHING_TIMEOUT_MS,
+			Date.now() - INVITATION_TIMEOUT_MS,
 			'+inf',
 			'BYSCORE');
 
@@ -138,15 +173,14 @@ export class ReversiService implements OnApplicationShutdown, OnModuleInit {
 
 		const matchings = await this.redisClient.zrange(
 			'reversi:matchAny',
-			Date.now() - MATCHING_TIMEOUT_MS,
-			'+inf',
-			'BYSCORE');
+			0,
+			2, // 自分自身のIDが入っている場合もあるので2つ取得
+			'REV');
 
 		const userIds = matchings.filter(id => id !== me.id);
 
 		if (userIds.length > 0) {
-			// pick random
-			const matchedUserId = userIds[Math.floor(Math.random() * userIds.length)];
+			const matchedUserId = userIds[0];
 
 			await this.redisClient.zrem('reversi:matchAny', me.id, matchedUserId);
 
@@ -154,7 +188,10 @@ export class ReversiService implements OnApplicationShutdown, OnModuleInit {
 
 			return game;
 		} else {
-			await this.redisClient.zadd('reversi:matchAny', Date.now(), me.id);
+			const redisPipeline = this.redisClient.pipeline();
+			redisPipeline.zadd('reversi:matchAny', Date.now(), me.id);
+			redisPipeline.expire('reversi:matchAny', 15, 'NX');
+			await redisPipeline.exec();
 			return null;
 		}
 	}
@@ -167,6 +204,14 @@ export class ReversiService implements OnApplicationShutdown, OnModuleInit {
 	@bindThis
 	public async matchAnyUserCancel(user: MiUser) {
 		await this.redisClient.zrem('reversi:matchAny', user.id);
+	}
+
+	@bindThis
+	public async cleanOutdatedGames() {
+		await this.reversiGamesRepository.delete({
+			id: LessThan(this.idService.gen(Date.now() - 1000 * 60 * 10)),
+			isStarted: false,
+		});
 	}
 
 	@bindThis
@@ -334,7 +379,7 @@ export class ReversiService implements OnApplicationShutdown, OnModuleInit {
 	public async getInvitations(user: MiUser): Promise<MiUser['id'][]> {
 		const invitations = await this.redisClient.zrange(
 			`reversi:matchSpecific:${user.id}`,
-			Date.now() - MATCHING_TIMEOUT_MS,
+			Date.now() - INVITATION_TIMEOUT_MS,
 			'+inf',
 			'BYSCORE');
 		return invitations;
