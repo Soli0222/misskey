@@ -98,6 +98,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			{{ i18n.ts._reversi.lookingForPlayer }}<MkEllipsis/>
 		</div>
 		<div class="cancel">
+			<MkButton inline gradate rounded @click="shareWaitng">{{ i18n.ts.note }}</MkButton>
 			<MkButton inline rounded @click="cancelMatching">{{ i18n.ts.cancel }}</MkButton>
 		</div>
 	</div>
@@ -213,6 +214,13 @@ function cancelMatching() {
 		misskeyApi('reversi/cancel-match', { userId: null });
 		matchingAny.value = false;
 	}
+}
+
+function shareWaitng() {
+	os.post({
+		initialText: 'フリーマッチ待機中！',
+		instant: true,
+	});
 }
 
 async function accept(user) {
