@@ -119,6 +119,7 @@ import MkPagination from '@/components/MkPagination.vue';
 import { useRouter } from '@/global/router/supplier.js';
 import * as os from '@/os.js';
 import { useInterval } from '@/scripts/use-interval.js';
+import { pleaseLogin } from '@/scripts/please-login.js';
 import * as sound from '@/scripts/sound.js';
 
 const myGamesPagination = {
@@ -158,6 +159,7 @@ if ($i) {
 const invitations = ref<Misskey.entities.UserLite[]>([]);
 const matchingUser = ref<Misskey.entities.UserLite | null>(null);
 const matchingAny = ref<boolean>(false);
+const noIrregularRules = ref<boolean>(false);
 
 function startGame(game: Misskey.entities.ReversiGameDetailed) {
 	matchingUser.value = null;
@@ -183,6 +185,7 @@ async function matchHeatbeat() {
 	} else if (matchingAny.value) {
 		const res = await misskeyApi('reversi/match', {
 			userId: null,
+			noIrregularRules: noIrregularRules.value,
 		});
 
 		if (res != null) {
@@ -192,7 +195,9 @@ async function matchHeatbeat() {
 }
 
 async function matchUser() {
-	const user = await os.selectUser({ local: true });
+	pleaseLogin();
+
+	const user = await os.selectUser({ localOnly: true });
 	if (user == null) return;
 
 	matchingUser.value = user;
@@ -200,10 +205,24 @@ async function matchUser() {
 	matchHeatbeat();
 }
 
-async function matchAny() {
-	matchingAny.value = true;
+function matchAny(ev: MouseEvent) {
+	pleaseLogin();
 
-	matchHeatbeat();
+	os.popupMenu([{
+		text: i18n.ts._reversi.allowIrregularRules,
+		action: () => {
+			noIrregularRules.value = false;
+			matchingAny.value = true;
+			matchHeatbeat();
+		},
+	}, {
+		text: i18n.ts._reversi.disallowIrregularRules,
+		action: () => {
+			noIrregularRules.value = true;
+			matchingAny.value = true;
+			matchHeatbeat();
+		},
+	}], ev.currentTarget ?? ev.target);
 }
 
 function cancelMatching() {
