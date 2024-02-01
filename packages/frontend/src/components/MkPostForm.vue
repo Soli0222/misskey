@@ -578,6 +578,7 @@ function clear() {
 function onKeydown(ev: KeyboardEvent) {
 	if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey) && canPost.value) post();
 	if (ev.key === 'Escape') emit('esc');
+	if ((ev.ctrlKey || ev.metaKey) && ev.shiftKey) toggleCircle();
 }
 
 function onCompositionUpdate(ev: CompositionEvent) {
