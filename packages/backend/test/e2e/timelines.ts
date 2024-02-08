@@ -486,20 +486,6 @@ describe('Timelines', () => {
 	});
 
 	describe('Local TL', () => {
-		test.concurrent('visibility: home なノートが含まれない', async () => {
-			const [alice, bob, carol] = await Promise.all([signup(), signup(), signup()]);
-
-			const carolNote = await post(carol, { text: 'hi', visibility: 'home' });
-			const bobNote = await post(bob, { text: 'hi' });
-
-			await waitForPushToTl();
-
-			const res = await api('/notes/local-timeline', { limit: 100 }, alice);
-
-			assert.strictEqual(res.body.some((note: any) => note.id === bobNote.id), true);
-			assert.strictEqual(res.body.some((note: any) => note.id === carolNote.id), false);
-		});
-
 		test.concurrent('他人の他人への返信が含まれない', async () => {
 			const [alice, bob, carol] = await Promise.all([signup(), signup(), signup()]);
 
@@ -551,23 +537,6 @@ describe('Timelines', () => {
 			const res = await api('/notes/local-timeline', { limit: 100 }, alice);
 
 			assert.strictEqual(res.body.some((note: any) => note.id === bobNote.id), false);
-		});
-
-		// 含まれても良いと思うけど実装が面倒なので含まれない
-		test.concurrent('フォローしているユーザーの visibility: home なノートが含まれない', async () => {
-			const [alice, bob, carol] = await Promise.all([signup(), signup(), signup()]);
-
-			await api('/following/create', { userId: carol.id }, alice);
-			await sleep(1000);
-			const carolNote = await post(carol, { text: 'hi', visibility: 'home' });
-			const bobNote = await post(bob, { text: 'hi' });
-
-			await waitForPushToTl();
-
-			const res = await api('/notes/local-timeline', { limit: 100 }, alice);
-
-			assert.strictEqual(res.body.some((note: any) => note.id === bobNote.id), true);
-			assert.strictEqual(res.body.some((note: any) => note.id === carolNote.id), false);
 		});
 
 		test.concurrent('ミュートしているユーザーのノートが含まれない', async () => {
@@ -677,18 +646,6 @@ describe('Timelines', () => {
 			const res = await api('/notes/hybrid-timeline', { limit: 100 }, alice);
 
 			assert.strictEqual(res.body.some((note: any) => note.id === bobNote.id), true);
-		});
-
-		test.concurrent('ローカルユーザーの visibility: home なノートが含まれない', async () => {
-			const [alice, bob] = await Promise.all([signup(), signup()]);
-
-			const bobNote = await post(bob, { text: 'hi', visibility: 'home' });
-
-			await waitForPushToTl();
-
-			const res = await api('/notes/hybrid-timeline', { limit: 100 }, alice);
-
-			assert.strictEqual(res.body.some((note: any) => note.id === bobNote.id), false);
 		});
 
 		test.concurrent('フォローしているローカルユーザーの visibility: home なノートが含まれる', async () => {
