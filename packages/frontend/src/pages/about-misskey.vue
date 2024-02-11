@@ -28,7 +28,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkButton primary rounded inline @click="iLoveMisskey">I <Mfm text="$[jelly ❤]"/> #Misskey</MkButton>
 				</div>
 				<FormSection>
-					<div class="_formLinks">
+					<div class="_gaps_s">
 						<FormLink to="https://github.com/Soli0222/misskey" external>
 							<template #icon><i class="ti ti-code"></i></template>
 							{{ i18n.ts._aboutMisskey.source }}
@@ -218,13 +218,13 @@ const patronsWithIcon = [{
 	icon: 'https://assets.misskey-hub.net/patrons/302dce2898dd457ba03c3f7dc037900b.jpg',
 }, {
 	name: 'taichan',
-	icon: 'https://assets.misskey-hub.net/patrons/f981ab0159fb4e2c998e05f7263e1cd9.png',
+	icon: 'https://assets.misskey-hub.net/patrons/f981ab0159fb4e2c998e05f7263e1cd9.jpg',
 }, {
 	name: '猫吉よりお',
-	icon: 'https://assets.misskey-hub.net/patrons/a11518b3b34b4536a4bdd7178ba76a7b.png',
+	icon: 'https://assets.misskey-hub.net/patrons/a11518b3b34b4536a4bdd7178ba76a7b.jpg',
 }, {
 	name: '有栖かずみ',
-	icon: 'https://assets.misskey-hub.net/patrons/9240e8e0ba294a8884143e99ac7ed6a0.png',
+	icon: 'https://assets.misskey-hub.net/patrons/9240e8e0ba294a8884143e99ac7ed6a0.jpg',
 }];
 
 const patrons = [
