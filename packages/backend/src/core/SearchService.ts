@@ -149,7 +149,7 @@ export class SearchService {
 
 	@bindThis
 	public async unindexNote(note: MiNote): Promise<void> {
-		if (!['home', 'public'].includes(note.visibility)) return;
+		//if (!['home', 'public'].includes(note.visibility)) return;
 
 		if (this.meilisearch) {
 			this.meilisearchNoteIndex!.deleteDocument(note.id);
