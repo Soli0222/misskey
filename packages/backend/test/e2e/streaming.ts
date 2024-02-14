@@ -246,6 +246,36 @@ describe('Streaming', () => {
 				assert.strictEqual(fired, false);
 			});
 			*/
+
+			test('ホーム指定の投稿は流れない', async () => {
+				const fired = await waitFire(
+					ayano, 'localTimeline',	// ayano:Local
+					() => api('notes/create', { text: 'foo', visibility: 'home' }, kyoko),	// kyoko home posts
+					msg => msg.type === 'note' && msg.body.userId === kyoko.id,	// wait kyoko
+				);
+
+				assert.strictEqual(fired, false);
+			});
+
+			test('フォローしているローカルユーザーのダイレクト投稿は流れない', async () => {
+				const fired = await waitFire(
+					ayano, 'localTimeline',	// ayano:Local
+					() => api('notes/create', { text: 'foo', visibility: 'specified', visibleUserIds: [ayano.id] }, kyoko),	// kyoko DM => ayano
+					msg => msg.type === 'note' && msg.body.userId === kyoko.id,	// wait kyoko
+				);
+
+				assert.strictEqual(fired, false);
+			});
+
+			test('フォローしていないローカルユーザーのフォロワー宛て投稿は流れない', async () => {
+				const fired = await waitFire(
+					ayano, 'localTimeline',	// ayano:Local
+					() => api('notes/create', { text: 'foo', visibility: 'followers' }, chitose),
+					msg => msg.type === 'note' && msg.body.userId === chitose.id,	// wait chitose
+				);
+
+				assert.strictEqual(fired, false);
+			});
 		});
 
 		describe('Hybrid Timeline', () => {
@@ -335,6 +365,16 @@ describe('Streaming', () => {
 				const fired = await waitFire(
 					ayano, 'hybridTimeline',	// ayano:Hybrid
 					() => api('notes/create', { text: 'foo', visibility: 'home' }, chitose),
+					msg => msg.type === 'note' && msg.body.userId === chitose.id,
+				);
+
+				assert.strictEqual(fired, false);
+			});
+
+			test('フォローしていないローカルユーザーのフォロワー宛て投稿は流れない', async () => {
+				const fired = await waitFire(
+					ayano, 'hybridTimeline',	// ayano:Hybrid
+					() => api('notes/create', { text: 'foo', visibility: 'followers' }, chitose),
 					msg => msg.type === 'note' && msg.body.userId === chitose.id,
 				);
 
