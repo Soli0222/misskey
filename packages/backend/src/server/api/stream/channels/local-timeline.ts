@@ -51,7 +51,7 @@ class LocalTimelineChannel extends Channel {
 		if (this.withFiles && (note.fileIds == null || note.fileIds.length === 0)) return;
 
 		if (note.user.host !== null) return;
-		// if (note.visibility !== 'public') return;
+		if (note.visibility !== 'public') return;
 		if (note.channelId != null) return;
 
 		// 関係ない返信は除外
