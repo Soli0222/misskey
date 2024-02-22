@@ -6931,6 +6931,10 @@ export interface Locale extends ILocale {
          * 控えめに警告
          */
         "quiet": string;
+        /**
+         * 警告しない(非推奨)
+         */
+        "nowarning": string;
     };
     "_channel": {
         /**
