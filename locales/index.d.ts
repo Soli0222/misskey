@@ -705,6 +705,14 @@ export interface Locale extends ILocale {
      */
     "flagAsSheepDescription": string;
     /**
+     * ？？？？？？？？？？？？？？？？？？？？？？？？？？？
+     */
+    "flagAsDsite": string;
+    /**
+     * ？？？？？？？？
+     */
+    "flagAsDsiteDescription": string;
+    /**
      * タイムラインにノートへの返信を表示する
      */
     "flagShowTimelineReplies": string;

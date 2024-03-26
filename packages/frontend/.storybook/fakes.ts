@@ -102,6 +102,7 @@ export function userDetailed(id = 'someuserid', username = 'miskist', host = 'mi
 		isBot: false,
 		isCat: false,
 		isSheep: false,
+		isDsite: false,
 		isFollowed: false,
 		isFollowing: false,
 		isLocked: false,

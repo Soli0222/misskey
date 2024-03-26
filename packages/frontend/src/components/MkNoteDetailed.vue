@@ -67,7 +67,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</header>
 		<div :class="$style.noteContent">
 			<p v-if="appearNote.cw != null" :class="$style.cw">
-				<Mfm v-if="appearNote.cw != ''" style="margin-right: 8px;" :text="appearNote.cw" :author="appearNote.user" :nyaize="'respect'" :myaize="'respect'"/>
+				<Mfm v-if="appearNote.cw != ''" style="margin-right: 8px;" :text="appearNote.cw" :author="appearNote.user" :nyaize="'respect'" :myaize="'respect'" :dlsize="'respect'"/>
 				<MkCwButton v-model="showContent" :text="appearNote.text" :files="appearNote.files" :poll="appearNote.poll"/>
 			</p>
 			<div v-show="appearNote.cw == null || showContent">
@@ -80,6 +80,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					:author="appearNote.user"
 					:nyaize="'respect'"
 					:myaize="'respect'"
+					:dlsize="'respect'"
 					:emojiUrls="appearNote.emojis"
 					:enableEmojiMenu="true"
 					:enableEmojiMenuReaction="true"
@@ -89,7 +90,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkLoading v-if="translating" mini/>
 					<div v-else-if="translation">
 						<b>{{ i18n.tsx.translatedFrom({ x: translation.sourceLang }) }}: </b>
-						<Mfm :text="translation.text" :author="appearNote.user" :nyaize="'respect'" :myaize="'respect'" :emojiUrls="appearNote.emojis"/>
+						<Mfm :text="translation.text" :author="appearNote.user" :nyaize="'respect'" :myaize="'respect'" :dlsize="'respect'" :emojiUrls="appearNote.emojis"/>
 					</div>
 				</div>
 				<div v-if="denyaize" :class="$style.translation">

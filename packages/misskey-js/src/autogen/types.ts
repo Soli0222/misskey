@@ -3590,6 +3590,7 @@ export type components = {
       isBot?: boolean;
       isCat?: boolean;
       isSheep?: boolean;
+			isDsite?: boolean;
       instance?: {
         name: string | null;
         softwareName: string | null;
@@ -18807,6 +18808,7 @@ export type operations = {
           isBot?: boolean;
           isCat?: boolean;
           isSheep?: boolean;
+					isDsite?: boolean;
           injectFeaturedNote?: boolean;
           receiveAnnouncementEmail?: boolean;
           alwaysMarkNsfw?: boolean;
