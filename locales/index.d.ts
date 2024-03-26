@@ -3489,6 +3489,10 @@ export interface Locale extends ILocale {
      */
     "whatIsNew": string;
     /**
+     * キャッシュクリアして閉じる(推奨)
+     */
+    "closeandclear": string;
+    /**
      * 翻訳
      */
     "translate": string;

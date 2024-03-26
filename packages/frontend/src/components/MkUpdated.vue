@@ -10,6 +10,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div :class="$style.version">✨{{ version }}🚀</div>
 		<MkButton full @click="whatIsNew">{{ i18n.ts.whatIsNew }}</MkButton>
 		<MkButton :class="$style.gotIt" primary full @click="modal?.close()">{{ i18n.ts.gotIt }}</MkButton>
+		<MkButton :class="$style.gotIt" primary full @click="clearCache()">{{ i18n.ts.closeandclear }}</MkButton>
 	</div>
 </MkModal>
 </template>
@@ -22,6 +23,7 @@ import MkSparkle from '@/components/MkSparkle.vue';
 import { version } from '@/config.js';
 import { i18n } from '@/i18n.js';
 import { confetti } from '@/scripts/confetti.js';
+import { clearCache } from '@/scripts/clear-cache.js';
 
 const modal = shallowRef<InstanceType<typeof MkModal>>();
 
