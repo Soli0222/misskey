@@ -22,6 +22,7 @@ import { defaultStore } from '@/store.js';
 import { nyaize as doNyaize } from '@/scripts/nyaize.js';
 import { safeParseFloat } from '@/scripts/safe-parse.js';
 import { myaize as doMyaize } from '@/scripts/myaize.js';
+import { dlsize as doDlsize } from '@/scripts/dlsize.js';
 
 const QUOTE_STYLE = `
 display: block;
@@ -42,6 +43,7 @@ type MfmProps = {
 	rootScale?: number;
 	nyaize?: boolean | 'respect';
 	myaize?: boolean | 'respect';
+	dlsize?: boolean | 'respect';
 	parsedNodes?: mfm.MfmNode[] | null;
 	enableEmojiMenu?: boolean;
 	enableEmojiMenuReaction?: boolean;
@@ -56,6 +58,7 @@ export default function (props: MfmProps, { emit }: { emit: SetupContext<MfmEven
 	const isNote = props.isNote ?? true;
 	const shouldNyaize = props.nyaize ? props.nyaize === 'respect' ? props.author?.isCat : false : false;
 	const shouldMyaize = props.myaize ? props.myaize === 'respect' ? props.author?.isSheep : false : false;
+	const shouldDlsize = props.dlsize ? props.dlsize === 'respect' ? props.author?.isDsite : false : false;
 
 	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 	if (props.text == null || props.text === '') return;
@@ -81,8 +84,9 @@ export default function (props: MfmProps, { emit }: { emit: SetupContext<MfmEven
 	 * @param scale How times large the text is
 	 * @param disableNyaize Whether nyaize is disabled or not
 	 * @param disableMyaize Whether myaize is disabled or not
+	 * @param disableDlsize Whether dlsize is disabled or not
 	 */
-	const genEl = (ast: mfm.MfmNode[], scale: number, disableNyaize = false, disableMyaize = false) => ast.map((token): VNode | string | (VNode | string)[] => {
+	const genEl = (ast: mfm.MfmNode[], scale: number, disableNyaize = false, disableMyaize = false, disableDlsize = false) => ast.map((token): VNode | string | (VNode | string)[] => {
 		switch (token.type) {
 			case 'text': {
 				let text = token.props.text.replace(/(\r\n|\n|\r)/g, '\n');
@@ -92,6 +96,10 @@ export default function (props: MfmProps, { emit }: { emit: SetupContext<MfmEven
 
 				if (!disableMyaize && shouldMyaize) {
 					text = doMyaize(text);
+				}
+
+				if (!disableDlsize && shouldDlsize) {
+					text = doDlsize(text);
 				}
 
 				if (!props.plain) {

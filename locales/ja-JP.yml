@@ -172,6 +172,8 @@ flagAsCat: "にゃああああああああああああああ！！！！！！�
 flagAsCatDescription: "にゃにゃにゃ？？"
 flagAsSheep: "みゃああああああああああああああ！！！！！！！！！！！！"
 flagAsSheepDescription: "みゃみゃみゃ？？"
+flagAsDsite: "？？？？？？？？？？？？？？？？？？？？？？？？？？？"
+flagAsDsiteDescription: "？？？？？？？？"
 flagShowTimelineReplies: "タイムラインにノートへの返信を表示する"
 flagShowTimelineRepliesDescription: "オンにすると、タイムラインにユーザーのノート以外にもそのユーザーの他のノートへの返信を表示します。"
 autoAcceptFollowed: "フォロー中ユーザーからのフォロリクを自動承認"

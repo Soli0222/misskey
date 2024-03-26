@@ -12,6 +12,7 @@ import { customEmojis } from '@/custom-emojis.js';
 import { url, lang } from '@/config.js';
 import { nyaize } from '@/scripts/nyaize.js';
 import { myaize } from '@/scripts/myaize.js';
+import { dlsize } from '@/scripts/dlsize.js';
 
 export function aiScriptReadline(q: string): Promise<string> {
 	return new Promise(ok => {
@@ -93,6 +94,10 @@ export function createAiScriptEnv(opts) {
 		'Mk:myaize': values.FN_NATIVE(([text]) => {
 			utils.assertString(text);
 			return values.STR(myaize(text.value));
+		}),
+		'Mk:dlsize': values.FN_NATIVE(([text]) => {
+			utils.assertString(text);
+			return values.STR(dlsize(text.value));
 		}),
 	};
 }

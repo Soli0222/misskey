@@ -41,6 +41,7 @@ describe('ユーザー', () => {
 			isBot: user.isBot,
 			isCat: user.isCat,
 			isSheep: user.isSheep,
+			isDsite: user.isDsite,
 			instance: user.instance,
 			emojis: user.emojis,
 			onlineStatus: user.onlineStatus,
@@ -310,6 +311,7 @@ describe('ユーザー', () => {
 		assert.strictEqual(response.isBot, false);
 		assert.strictEqual(response.isCat, false);
 		assert.strictEqual(response.isSheep, false);
+		assert.strictEqual(response.isDsite, false);
 		assert.strictEqual(response.instance, undefined);
 		assert.deepStrictEqual(response.emojis, {});
 		assert.strictEqual(response.onlineStatus, 'unknown');
@@ -446,6 +448,8 @@ describe('ユーザー', () => {
 		{ parameters: () => ({ isCat: false }) },
 		{ parameters: (): object => ({ isSheep: true }) },
 		{ parameters: (): object => ({ isSheep: false }) },
+		{ parameters: (): object => ({ isDsite: true }) },
+		{ parameters: (): object => ({ isDsite: false }) },
 		{ parameters: () => ({ injectFeaturedNote: true }) },
 		{ parameters: () => ({ injectFeaturedNote: false }) },
 		{ parameters: () => ({ receiveAnnouncementEmail: true }) },
