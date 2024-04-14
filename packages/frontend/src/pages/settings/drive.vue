@@ -44,10 +44,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<template #label>{{ i18n.ts.keepOriginalUploading }}</template>
 				<template #caption>{{ i18n.ts.keepOriginalUploadingDescription }}</template>
 			</MkSwitch>
-			<MkSwitch v-model="keepOriginalFilename">
-				<template #label>{{ i18n.ts.keepOriginalFilename }}</template>
-				<template #caption>{{ i18n.ts.keepOriginalFilenameDescription }}</template>
-			</MkSwitch>
 			<MkSwitch v-model="alwaysMarkNsfw" @update:modelValue="saveProfile()">
 				<template #label>{{ i18n.ts.alwaysMarkSensitive }}</template>
 			</MkSwitch>
@@ -100,7 +96,6 @@ const meterStyle = computed(() => {
 });
 
 const keepOriginalUploading = computed(defaultStore.makeGetterSetter('keepOriginalUploading'));
-const keepOriginalFilename = computed(defaultStore.makeGetterSetter('keepOriginalFilename'));
 
 misskeyApi('drive').then(info => {
 	capacity.value = info.capacity;

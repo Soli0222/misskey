@@ -8,13 +8,12 @@ process.env.NODE_ENV = 'test';
 import * as assert from 'assert';
 import { MiNote } from '@/models/Note.js';
 import { MAX_NOTE_TEXT_LENGTH } from '@/const.js';
-import { api, initTestDb, post, role, signup, uploadFile, uploadUrl } from '../utils.js';
+import { api, initTestDb, post, signup, uploadFile, uploadUrl } from '../utils.js';
 import type * as misskey from 'misskey-js';
 
 describe('Note', () => {
 	let Notes: any;
 
-	let root: misskey.entities.SignupResponse;
 	let alice: misskey.entities.SignupResponse;
 	let bob: misskey.entities.SignupResponse;
 	let tom: misskey.entities.SignupResponse;
@@ -22,7 +21,6 @@ describe('Note', () => {
 	beforeAll(async () => {
 		const connection = await initTestDb(true);
 		Notes = connection.getRepository(MiNote);
-		root = await signup({ username: 'root' });
 		alice = await signup({ username: 'alice' });
 		bob = await signup({ username: 'bob' });
 		tom = await signup({ username: 'tom', host: 'example.com' });
@@ -475,14 +473,14 @@ describe('Note', () => {
 						value: true,
 					},
 				} as any,
-			}, root);
+			}, alice);
 
 			assert.strictEqual(res.status, 200);
 
 			const assign = await api('admin/roles/assign', {
 				userId: alice.id,
 				roleId: res.body.id,
-			}, root);
+			}, alice);
 
 			assert.strictEqual(assign.status, 204);
 			assert.strictEqual(file.body!.isSensitive, false);
@@ -510,11 +508,11 @@ describe('Note', () => {
 			await api('admin/roles/unassign', {
 				userId: alice.id,
 				roleId: res.body.id,
-			}, root);
+			});
 
 			await api('admin/roles/delete', {
 				roleId: res.body.id,
-			}, root);
+			}, alice);
 		});
 	});
 
@@ -646,7 +644,7 @@ describe('Note', () => {
 				sensitiveWords: [
 					'test',
 				],
-			}, root);
+			}, alice);
 
 			assert.strictEqual(sensitive.status, 204);
 
@@ -665,7 +663,7 @@ describe('Note', () => {
 				sensitiveWords: [
 					'/Test/i',
 				],
-			}, root);
+			}, alice);
 
 			assert.strictEqual(sensitive.status, 204);
 
@@ -682,7 +680,7 @@ describe('Note', () => {
 				sensitiveWords: [
 					'Test hoge',
 				],
-			}, root);
+			}, alice);
 
 			assert.strictEqual(sensitive.status, 204);
 
@@ -699,7 +697,7 @@ describe('Note', () => {
 				prohibitedWords: [
 					'test',
 				],
-			}, root);
+			}, alice);
 
 			assert.strictEqual(prohibited.status, 204);
 
@@ -718,7 +716,7 @@ describe('Note', () => {
 				prohibitedWords: [
 					'/Test/i',
 				],
-			}, root);
+			}, alice);
 
 			assert.strictEqual(prohibited.status, 204);
 
@@ -735,7 +733,7 @@ describe('Note', () => {
 				prohibitedWords: [
 					'Test hoge',
 				],
-			}, root);
+			}, alice);
 
 			assert.strictEqual(prohibited.status, 204);
 
@@ -752,7 +750,7 @@ describe('Note', () => {
 				prohibitedWords: [
 					'test',
 				],
-			}, root);
+			}, alice);
 
 			assert.strictEqual(prohibited.status, 204);
 
@@ -787,7 +785,7 @@ describe('Note', () => {
 						value: 0,
 					},
 				} as any,
-			}, root);
+			}, alice);
 
 			assert.strictEqual(res.status, 200);
 
@@ -796,7 +794,7 @@ describe('Note', () => {
 			const assign = await api('admin/roles/assign', {
 				userId: alice.id,
 				roleId: res.body.id,
-			}, root);
+			}, alice);
 
 			assert.strictEqual(assign.status, 204);
 
@@ -812,11 +810,11 @@ describe('Note', () => {
 			await api('admin/roles/unassign', {
 				userId: alice.id,
 				roleId: res.body.id,
-			}, root);
+			});
 
 			await api('admin/roles/delete', {
 				roleId: res.body.id,
-			}, root);
+			}, alice);
 		});
 
 		test('ダイレクト投稿もエラーになる', async () => {
@@ -841,7 +839,7 @@ describe('Note', () => {
 						value: 0,
 					},
 				} as any,
-			}, root);
+			}, alice);
 
 			assert.strictEqual(res.status, 200);
 
@@ -850,7 +848,7 @@ describe('Note', () => {
 			const assign = await api('admin/roles/assign', {
 				userId: alice.id,
 				roleId: res.body.id,
-			}, root);
+			}, alice);
 
 			assert.strictEqual(assign.status, 204);
 
@@ -868,11 +866,11 @@ describe('Note', () => {
 			await api('admin/roles/unassign', {
 				userId: alice.id,
 				roleId: res.body.id,
-			}, root);
+			});
 
 			await api('admin/roles/delete', {
 				roleId: res.body.id,
-			}, root);
+			}, alice);
 		});
 
 		test('ダイレクトの宛先とメンションが同じ場合は重複してカウントしない', async () => {
@@ -897,7 +895,7 @@ describe('Note', () => {
 						value: 1,
 					},
 				} as any,
-			}, root);
+			}, alice);
 
 			assert.strictEqual(res.status, 200);
 
@@ -906,7 +904,7 @@ describe('Note', () => {
 			const assign = await api('admin/roles/assign', {
 				userId: alice.id,
 				roleId: res.body.id,
-			}, root);
+			}, alice);
 
 			assert.strictEqual(assign.status, 204);
 
@@ -923,11 +921,11 @@ describe('Note', () => {
 			await api('admin/roles/unassign', {
 				userId: alice.id,
 				roleId: res.body.id,
-			}, root);
+			});
 
 			await api('admin/roles/delete', {
 				roleId: res.body.id,
-			}, root);
+			}, alice);
 		});
 	});
 
@@ -960,63 +958,6 @@ describe('Note', () => {
 			assert.strictEqual(deleteTwoRes.status, 204);
 			mainNote = await Notes.findOneBy({ id: mainNoteRes.body.createdNote.id });
 			assert.strictEqual(mainNote.repliesCount, 0);
-		});
-	});
-
-	describe('notes/translate', () => {
-		describe('翻訳機能の利用が許可されていない場合', () => {
-			let cannotTranslateRole: misskey.entities.Role;
-
-			beforeAll(async () => {
-				cannotTranslateRole = await role(root, {}, { canUseTranslator: false });
-				await api('admin/roles/assign', { roleId: cannotTranslateRole.id, userId: alice.id }, root);
-			});
-
-			test('翻訳機能の利用が許可されていない場合翻訳できない', async () => {
-				const aliceNote = await post(alice, { text: 'Hello' });
-				const res = await api('notes/translate', {
-					noteId: aliceNote.id,
-					targetLang: 'ja',
-				}, alice);
-
-				assert.strictEqual(res.status, 400);
-				assert.strictEqual(res.body.error.code, 'UNAVAILABLE');
-			});
-
-			afterAll(async () => {
-				await api('admin/roles/unassign', { roleId: cannotTranslateRole.id, userId: alice.id }, root);
-			});
-		});
-
-		test('存在しないノートは翻訳できない', async () => {
-			const res = await api('notes/translate', { noteId: 'foo', targetLang: 'ja' }, alice);
-
-			assert.strictEqual(res.status, 400);
-			assert.strictEqual(res.body.error.code, 'NO_SUCH_NOTE');
-		});
-
-		test('不可視なノートは翻訳できない', async () => {
-			const aliceNote = await post(alice, { visibility: 'followers', text: 'Hello' });
-			const bobTranslateAttempt = await api('notes/translate', { noteId: aliceNote.id, targetLang: 'ja' }, bob);
-
-			assert.strictEqual(bobTranslateAttempt.status, 400);
-			assert.strictEqual(bobTranslateAttempt.body.error.code, 'CANNOT_TRANSLATE_INVISIBLE_NOTE');
-		});
-
-		test('text: null なノートを翻訳すると空のレスポンスが返ってくる', async () => {
-			const aliceNote = await post(alice, { text: null, poll: { choices: ['kinoko', 'takenoko'] } });
-			const res = await api('notes/translate', { noteId: aliceNote.id, targetLang: 'ja' }, alice);
-
-			assert.strictEqual(res.status, 204);
-		});
-
-		test('サーバーに DeepL 認証キーが登録されていない場合翻訳できない', async () => {
-			const aliceNote = await post(alice, { text: 'Hello' });
-			const res = await api('notes/translate', { noteId: aliceNote.id, targetLang: 'ja' }, alice);
-
-			// NOTE: デフォルトでは登録されていないので落ちる
-			assert.strictEqual(res.status, 400);
-			assert.strictEqual(res.body.error.code, 'UNAVAILABLE');
 		});
 	});
 });

@@ -35,7 +35,7 @@ const routes: RouteDef[] = [{
 	component: page(() => import('@/pages/user/index.vue')),
 }, {
 	name: 'note',
-	path: '/notes/:noteId/:initialTab?',
+	path: '/notes/:noteId',
 	component: page(() => import('@/pages/note.vue')),
 }, {
 	name: 'list',
