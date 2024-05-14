@@ -4980,10 +4980,6 @@ export interface Locale extends ILocale {
      * フォローの際常に確認する
      */
     "alwaysConfirmFollow": string;
-    /**
-     * お問い合わせ
-     */
-    "inquiry": string;
     "_bubbleGame": {
         /**
          * 遊び方

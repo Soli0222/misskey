@@ -119,7 +119,7 @@ async function assign() {
 	const user = await os.selectUser({ includeSelf: true });
 
 	const { canceled: canceled2, result: period } = await os.select({
-		title: i18n.ts.period + ': ' + role.name,
+		title: i18n.ts.period,
 		items: [{
 			value: 'indefinitely', text: i18n.ts.indefinitely,
 		}, {

@@ -416,7 +416,7 @@ async function assignRole() {
 	if (canceled) return;
 
 	const { canceled: canceled2, result: period } = await os.select({
-		title: i18n.ts.period + ': ' + roles.find(r => r.id === roleId)!.name,
+		title: i18n.ts.period,
 		items: [{
 			value: 'indefinitely', text: i18n.ts.indefinitely,
 		}, {

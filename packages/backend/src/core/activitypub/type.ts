@@ -25,7 +25,6 @@ export interface IObject {
 	endTime?: Date;
 	icon?: any;
 	image?: any;
-	mediaType?: string;
 	url?: ApObject | string;
 	href?: string;
 	tag?: IObject | IObject[];
@@ -241,14 +240,14 @@ export interface IKey extends IObject {
 }
 
 export interface IApDocument extends IObject {
-	type: 'Audio' | 'Document' | 'Image' | 'Page' | 'Video';
+	type: 'Document';
+	name: string | null;
+	mediaType: string;
 }
 
-export const isDocument = (object: IObject): object is IApDocument =>
-	['Audio', 'Document', 'Image', 'Page', 'Video'].includes(getApType(object));
-
-export interface IApImage extends IApDocument {
+export interface IApImage extends IObject {
 	type: 'Image';
+	name: string | null;
 }
 
 export interface ICreate extends IActivity {

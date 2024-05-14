@@ -94,7 +94,7 @@ export const defaultStore = markRaw(new Storage('base', {
 	},
 	defaultNoteVisibility: {
 		where: 'account',
-		default: 'public' as (typeof Misskey.noteVisibilities)[number],
+		default: 'public',
 	},
 	defaultNoteLocalOnly: {
 		where: 'account',
@@ -150,7 +150,7 @@ export const defaultStore = markRaw(new Storage('base', {
 	},
 	visibility: {
 		where: 'deviceAccount',
-		default: 'public' as (typeof Misskey.noteVisibilities)[number],
+		default: 'public' as 'public' | 'home' | 'followers' | 'specified',
 	},
 	localOnly: {
 		where: 'deviceAccount',

@@ -7,14 +7,14 @@ import * as crypto from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { HttpRequestService } from '@/core/HttpRequestService.js';
 import { bindThis } from '@/decorators.js';
-import { CONTEXT, PRELOADED_CONTEXTS } from './misc/contexts.js';
+import { CONTEXTS } from './misc/contexts.js';
 import { validateContentTypeSetAsJsonLD } from './misc/validator.js';
 import type { JsonLdDocument } from 'jsonld';
-import type { JsonLd as JsonLdObject, RemoteDocument } from 'jsonld/jsonld-spec.js';
+import type { JsonLd, RemoteDocument } from 'jsonld/jsonld-spec.js';
 
-// RsaSignature2017 implementation is based on https://github.com/transmute-industries/RsaSignature2017
+// RsaSignature2017 based from https://github.com/transmute-industries/RsaSignature2017
 
-class JsonLd {
+class LdSignature {
 	public debug = false;
 	public preLoad = true;
 	public loderTimeout = 5000;
@@ -89,18 +89,10 @@ class JsonLd {
 	}
 
 	@bindThis
-	public async compact(data: any, context: any = CONTEXT): Promise<JsonLdDocument> {
+	public async normalize(data: JsonLdDocument): Promise<string> {
 		const customLoader = this.getLoader();
 		// XXX: Importing jsonld dynamically since Jest frequently fails to import it statically
 		// https://github.com/misskey-dev/misskey/pull/9894#discussion_r1103753595
-		return (await import('jsonld')).default.compact(data, context, {
-			documentLoader: customLoader,
-		});
-	}
-
-	@bindThis
-	public async normalize(data: JsonLdDocument): Promise<string> {
-		const customLoader = this.getLoader();
 		return (await import('jsonld')).default.normalize(data, {
 			documentLoader: customLoader,
 		});
@@ -112,11 +104,11 @@ class JsonLd {
 			if (!/^https?:\/\//.test(url)) throw new Error(`Invalid URL ${url}`);
 
 			if (this.preLoad) {
-				if (url in PRELOADED_CONTEXTS) {
+				if (url in CONTEXTS) {
 					if (this.debug) console.debug(`HIT: ${url}`);
 					return {
 						contextUrl: undefined,
-						document: PRELOADED_CONTEXTS[url],
+						document: CONTEXTS[url],
 						documentUrl: url,
 					};
 				}
@@ -133,7 +125,7 @@ class JsonLd {
 	}
 
 	@bindThis
-	private async fetchDocument(url: string): Promise<JsonLdObject> {
+	private async fetchDocument(url: string): Promise<JsonLd> {
 		const json = await this.httpRequestService.send(
 			url,
 			{
@@ -154,7 +146,7 @@ class JsonLd {
 			}
 		});
 
-		return json as JsonLdObject;
+		return json as JsonLd;
 	}
 
 	@bindThis
@@ -166,14 +158,14 @@ class JsonLd {
 }
 
 @Injectable()
-export class JsonLdService {
+export class LdSignatureService {
 	constructor(
 		private httpRequestService: HttpRequestService,
 	) {
 	}
 
 	@bindThis
-	public use(): JsonLd {
-		return new JsonLd(this.httpRequestService);
+	public use(): LdSignature {
+		return new LdSignature(this.httpRequestService);
 	}
 }

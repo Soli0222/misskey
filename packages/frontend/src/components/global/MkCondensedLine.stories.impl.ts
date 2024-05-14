@@ -28,7 +28,6 @@ export const Default = {
 		};
 	},
 	args: {
-		// @ts-expect-error text is for test
 		text: 'This is a condensed line.',
 	},
 	parameters: {
@@ -42,5 +41,4 @@ export const ContainerIs100px = {
 			template: '<div style="width: 100px;"><story/></div>',
 		}),
 	],
-	// @ts-expect-error text is for test
 } satisfies StoryObj<typeof MkCondensedLine>;

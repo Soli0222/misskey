@@ -501,9 +501,10 @@ export function getNoteMenu(props: {
 	};
 }
 
-type Visibility = (typeof Misskey.noteVisibilities)[number];
+type Visibility = 'public' | 'home' | 'followers' | 'specified';
 
-function smallerVisibility(a: Visibility, b: Visibility): Visibility {
+// defaultStore.state.visibilityがstringなためstringも受け付けている
+function smallerVisibility(a: Visibility | string, b: Visibility | string): Visibility {
 	if (a === 'specified' || b === 'specified') return 'specified';
 	if (a === 'followers' || b === 'followers') return 'followers';
 	if (a === 'home' || b === 'home') return 'home';

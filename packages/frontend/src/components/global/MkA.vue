@@ -14,7 +14,7 @@ export type MkABehavior = 'window' | 'browser' | null;
 </script>
 
 <script lang="ts" setup>
-import { computed, inject, shallowRef } from 'vue';
+import { computed, shallowRef } from 'vue';
 import * as os from '@/os.js';
 import copyToClipboard from '@/scripts/copy-to-clipboard.js';
 import { url } from '@/config.js';
@@ -30,7 +30,7 @@ const props = withDefaults(defineProps<{
 	behavior: null,
 });
 
-const behavior = props.behavior ?? inject<MkABehavior>('linkNavigationBehavior', null);
+const linkBehaviour = props.behavior;
 
 const el = shallowRef<HTMLElement>();
 
@@ -86,13 +86,15 @@ function openWindow() {
 }
 
 function nav(ev: MouseEvent) {
-	if (behavior === 'browser') {
+	if (props.behavior === 'browser') {
 		location.href = props.to;
 		return;
 	}
 
-	if (behavior === 'window') {
-		return openWindow();
+	if (props.behavior) {
+		if (props.behavior === 'window') {
+			return openWindow();
+		}
 	}
 
 	if (ev.shiftKey) {

@@ -15,7 +15,7 @@ import * as Misskey from 'misskey-js';
 import MkModal from '@/components/MkModal.vue';
 import MkPostForm from '@/components/MkPostForm.vue';
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
 	reply?: Misskey.entities.Note;
 	renote?: Misskey.entities.Note;
 	channel?: any; // TODO
@@ -31,9 +31,7 @@ const props = withDefaults(defineProps<{
 	instant?: boolean;
 	fixed?: boolean;
 	autofocus?: boolean;
-}>(), {
-	initialLocalOnly: undefined,
-});
+}>();
 
 const emit = defineEmits<{
 	(ev: 'closed'): void;
