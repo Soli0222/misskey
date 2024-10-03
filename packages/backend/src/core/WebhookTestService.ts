@@ -185,7 +185,7 @@ function toPackedUserLite(user: MiUser, override?: Packed<'UserLite'>): Packed<'
 		isBot: user.isBot,
 		isCat: user.isCat,
 		isSheep: user.isSheep,
-		isDsite: user.isDsite
+		isDsite: user.isDsite,
 		emojis: user.emojis,
 		onlineStatus: 'active',
 		badgeRoles: [],
