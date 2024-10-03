@@ -88,6 +88,23 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<template #caption>{{ i18n.ts._profile.metadataDescription }}</template>
 	</FormSlot>
 
+	<MkInput v-model="profile.followedMessage" :max="200" manualSave :mfmPreview="false">
+		<template #label>{{ i18n.ts._profile.followedMessage }}<span class="_beta">{{ i18n.ts.beta }}</span></template>
+		<template #caption>
+			<div>{{ i18n.ts._profile.followedMessageDescription }}</div>
+			<div>{{ i18n.ts._profile.followedMessageDescriptionForLockedAccount }}</div>
+		</template>
+	</MkInput>
+
+	<MkSelect v-model="reactionAcceptance">
+		<template #label>{{ i18n.ts.reactionAcceptance }}</template>
+		<option :value="null">{{ i18n.ts.all }}</option>
+		<option value="likeOnlyForRemote">{{ i18n.ts.likeOnlyForRemote }}</option>
+		<option value="nonSensitiveOnly">{{ i18n.ts.nonSensitiveOnly }}</option>
+		<option value="nonSensitiveOnlyForLocalLikeOnlyForRemote">{{ i18n.ts.nonSensitiveOnlyForLocalLikeOnlyForRemote }}</option>
+		<option value="likeOnly">{{ i18n.ts.likeOnly }}</option>
+	</MkSelect>
+
 	<MkFolder>
 		<template #label>{{ i18n.ts.advancedSettings }}</template>
 
@@ -98,15 +115,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<MkSwitch v-model="profile.isBot">{{ i18n.ts.flagAsBot }}<template #caption>{{ i18n.ts.flagAsBotDescription }}</template></MkSwitch>
 		</div>
 	</MkFolder>
-
-	<MkSelect v-model="reactionAcceptance">
-		<template #label>{{ i18n.ts.reactionAcceptance }}</template>
-		<option :value="null">{{ i18n.ts.all }}</option>
-		<option value="likeOnlyForRemote">{{ i18n.ts.likeOnlyForRemote }}</option>
-		<option value="nonSensitiveOnly">{{ i18n.ts.nonSensitiveOnly }}</option>
-		<option value="nonSensitiveOnlyForLocalLikeOnlyForRemote">{{ i18n.ts.nonSensitiveOnlyForLocalLikeOnlyForRemote }}</option>
-		<option value="likeOnly">{{ i18n.ts.likeOnly }}</option>
-	</MkSelect>
 </div>
 </template>
 
@@ -140,6 +148,7 @@ const reactionAcceptance = computed(defaultStore.makeGetterSetter('reactionAccep
 const profile = reactive({
 	name: $i.name,
 	description: $i.description,
+	followedMessage: $i.followedMessage,
 	location: $i.location,
 	birthday: $i.birthday,
 	lang: $i.lang,
@@ -188,6 +197,8 @@ function save() {
 		name: profile.name || null,
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		description: profile.description || null,
+		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+		followedMessage: profile.followedMessage || null,
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		location: profile.location || null,
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
