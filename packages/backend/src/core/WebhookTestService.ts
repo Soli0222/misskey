@@ -63,6 +63,8 @@ function generateDummyUser(override?: Partial<MiUser>): MiUser {
 		isLocked: false,
 		isBot: false,
 		isCat: true,
+		isSheep: true,
+		isDsite: true,
 		isRoot: false,
 		isExplorable: true,
 		isHibernated: false,
@@ -182,6 +184,8 @@ function toPackedUserLite(user: MiUser, override?: Packed<'UserLite'>): Packed<'
 		})),
 		isBot: user.isBot,
 		isCat: user.isCat,
+		isSheep: user.isSheep,
+		isDsite: user.isDsite
 		emojis: user.emojis,
 		onlineStatus: 'active',
 		badgeRoles: [],
