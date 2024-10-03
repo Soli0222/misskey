@@ -978,6 +978,9 @@ type ClipsUpdateResponse = operations['clips___update']['responses']['200']['con
 type DateString = string;
 
 // @public (undocumented)
+export function dlsize(text: string): string;
+
+// @public (undocumented)
 type DriveFile = components['schemas']['DriveFile'];
 
 // @public (undocumented)
@@ -2587,6 +2590,9 @@ type MuteListResponse = operations['mute___list']['responses']['200']['content']
 type Muting = components['schemas']['Muting'];
 
 // @public (undocumented)
+export function myaize(text: string): string;
+
+// @public (undocumented)
 type MyAppsRequest = operations['my___apps']['requestBody']['content']['application/json'];
 
 // @public (undocumented)
@@ -2775,12 +2781,6 @@ export const notificationTypes: readonly ["note", "follow", "mention", "reply", 
 
 // @public (undocumented)
 export function nyaize(text: string): string;
-
-// @public (undocumented)
-export function myaize(text: string): string;
-
-// @public (undocumented)
-export function dlsize(text: string): string;
 
 // @public (undocumented)
 type Page = components['schemas']['Page'];
