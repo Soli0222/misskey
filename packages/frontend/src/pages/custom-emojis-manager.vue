@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -129,18 +129,19 @@ const toggleSelect = (emoji) => {
 };
 
 const add = async (ev: MouseEvent) => {
-	os.popup(defineAsyncComponent(() => import('./emoji-edit-dialog.vue')), {
+	const { dispose } = os.popup(defineAsyncComponent(() => import('./emoji-edit-dialog.vue')), {
 	}, {
 		done: result => {
 			if (result.created) {
 				emojisPaginationComponent.value.prepend(result.created);
 			}
 		},
-	}, 'closed');
+		closed: () => dispose(),
+	});
 };
 
 const edit = (emoji) => {
-	os.popup(defineAsyncComponent(() => import('./emoji-edit-dialog.vue')), {
+	const { dispose } = os.popup(defineAsyncComponent(() => import('./emoji-edit-dialog.vue')), {
 		emoji: emoji,
 	}, {
 		done: result => {
@@ -153,7 +154,8 @@ const edit = (emoji) => {
 				emojisPaginationComponent.value.removeItem(emoji.id);
 			}
 		},
-	}, 'closed');
+		closed: () => dispose(),
+	});
 };
 
 const importEmoji = (emoji) => {
@@ -305,10 +307,10 @@ const headerTabs = computed(() => [{
 	title: i18n.ts.remote,
 }]);
 
-definePageMetadata(computed(() => ({
+definePageMetadata(() => ({
 	title: i18n.ts.customEmojis,
 	icon: 'ti ti-icons',
-})));
+}));
 </script>
 
 <style lang="scss" scoped>
@@ -342,6 +344,7 @@ definePageMetadata(computed(() => ({
 				> .img {
 					width: 42px;
 					height: 42px;
+					object-fit: contain;
 				}
 
 				> .body {
@@ -388,6 +391,7 @@ definePageMetadata(computed(() => ({
 				> .img {
 					width: 32px;
 					height: 32px;
+					object-fit: contain;
 				}
 
 				> .body {

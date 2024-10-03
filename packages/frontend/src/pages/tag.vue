@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -28,6 +28,7 @@ import { i18n } from '@/i18n.js';
 import { $i } from '@/account.js';
 import { defaultStore } from '@/store.js';
 import * as os from '@/os.js';
+import { genEmbedCode } from '@/scripts/get-embed-code.js';
 
 const props = defineProps<{
 	tag: string;
@@ -51,14 +52,26 @@ async function post() {
 	notes.value?.pagingComponent?.reload();
 }
 
-const headerActions = computed(() => []);
+const headerActions = computed(() => [{
+	icon: 'ti ti-dots',
+	label: i18n.ts.more,
+	handler: (ev: MouseEvent) => {
+		os.popupMenu([{
+			text: i18n.ts.genEmbedCode,
+			icon: 'ti ti-code',
+			action: () => {
+				genEmbedCode('tags', props.tag);
+			},
+		}], ev.currentTarget ?? ev.target);
+	}
+}]);
 
 const headerTabs = computed(() => []);
 
-definePageMetadata(computed(() => ({
+definePageMetadata(() => ({
 	title: props.tag,
 	icon: 'ti ti-hash',
-})));
+}));
 </script>
 
 <style lang="scss" module>

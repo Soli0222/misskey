@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -16,7 +16,7 @@ import { ref } from 'vue';
 import * as Misskey from 'misskey-js';
 import MkMention from './MkMention.vue';
 import { i18n } from '@/i18n.js';
-import { host as localHost } from '@/config.js';
+import { host as localHost } from '@@/js/config.js';
 import { misskeyApi } from '@/scripts/misskey-api.js';
 
 const user = ref<Misskey.entities.UserLite>();

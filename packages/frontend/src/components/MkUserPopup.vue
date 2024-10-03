@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -13,7 +13,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 >
 	<div v-if="showing" :class="$style.root" class="_popup _shadow" :style="{ zIndex, top: top + 'px', left: left + 'px' }" @mouseover="() => { emit('mouseover'); }" @mouseleave="() => { emit('mouseleave'); }">
 		<div v-if="user != null">
-			<div :class="$style.banner" :style="user.bannerUrl ? `background-image: url(${user.bannerUrl})` : ''">
+			<div :class="$style.banner" :style="user.bannerUrl ? `background-image: url(${defaultStore.state.disableShowingAnimatedImages ? getStaticImageUrl(user.bannerUrl) : user.bannerUrl})` : ''">
 				<span v-if="$i && $i.id != user.id && user.isFollowed" :class="$style.followed">{{ i18n.ts.followsYou }}</span>
 			</div>
 			<svg viewBox="0 0 128 128" :class="$style.avatarBack">
@@ -67,6 +67,7 @@ import { i18n } from '@/i18n.js';
 import { defaultStore } from '@/store.js';
 import { $i } from '@/account.js';
 import { isFollowingVisibleForMe, isFollowersVisibleForMe } from '@/scripts/isFfVisibleForMe.js';
+import { getStaticImageUrl } from '@/scripts/media-proxy.js';
 
 const props = defineProps<{
 	showing: boolean;
@@ -86,6 +87,7 @@ const top = ref(0);
 const left = ref(0);
 
 function showMenu(ev: MouseEvent) {
+	if (user.value == null) return;
 	const { menu, cleanup } = getUserMenu(user.value);
 	os.popupMenu(menu, ev.currentTarget ?? ev.target).finally(cleanup);
 }
@@ -105,8 +107,8 @@ onMounted(() => {
 	}
 
 	const rect = props.source.getBoundingClientRect();
-	const x = ((rect.left + (props.source.offsetWidth / 2)) - (300 / 2)) + window.pageXOffset;
-	const y = rect.top + props.source.offsetHeight + window.pageYOffset;
+	const x = ((rect.left + (props.source.offsetWidth / 2)) - (300 / 2)) + window.scrollX;
+	const y = rect.top + props.source.offsetHeight + window.scrollY;
 
 	top.value = y;
 	left.value = x;

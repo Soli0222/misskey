@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -19,7 +19,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkInput v-if="!noExpirationDate" v-model="expiresAt" type="datetime-local">
 						<template #label>{{ i18n.ts.expirationDate }}</template>
 					</MkInput>
-					<MkInput v-model="createCount" type="number">
+					<MkInput v-model="createCount" type="number" min="1">
 						<template #label>{{ i18n.ts.createCount }}</template>
 					</MkInput>
 					<MkButton primary rounded @click="createWithOptions">{{ i18n.ts.create }}</MkButton>
@@ -113,10 +113,10 @@ function deleted(id: string) {
 const headerActions = computed(() => []);
 const headerTabs = computed(() => []);
 
-definePageMetadata({
+definePageMetadata(() => ({
 	title: i18n.ts.invite,
 	icon: 'ti ti-user-plus',
-});
+}));
 </script>
 
 <style lang="scss" module>

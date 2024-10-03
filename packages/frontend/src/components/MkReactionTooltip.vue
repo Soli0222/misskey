@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -36,6 +36,7 @@ const emit = defineEmits<{
 .icon {
 	display: block;
 	width: 60px;
+	max-height: 60px;
 	font-size: 60px; // unicodeな絵文字についてはwidthが効かないため
 	margin: 0 auto;
 	object-fit: contain;

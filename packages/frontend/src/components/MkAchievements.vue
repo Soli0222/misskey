@@ -1,12 +1,12 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
 <div>
 	<div v-if="achievements" :class="$style.root">
-		<div v-for="achievement in achievements" :key="achievement" :class="$style.achievement" class="_panel">
+		<div v-for="achievement in achievements" :key="achievement.name" :class="$style.achievement" class="_panel">
 			<div :class="$style.icon">
 				<div
 					:class="[$style.iconFrame, {
@@ -153,7 +153,7 @@ onMounted(() => {
 		background: linear-gradient(0deg, #ffee20, #eb7018);
 	}
 
-	&:before {
+	&::before {
 		content: "";
 		display: block;
 		position: absolute;
@@ -173,7 +173,7 @@ onMounted(() => {
 		background: linear-gradient(0deg, #e1e1e1, #7c7c7c);
 	}
 
-	&:before {
+	&::before {
 		content: "";
 		display: block;
 		position: absolute;

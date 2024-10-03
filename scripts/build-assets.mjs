@@ -1,26 +1,40 @@
 /*
- * SPDX-FileCopyrightText: syuilo and other misskey contributors
+ * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import cssnano from 'cssnano';
+import * as yaml from 'js-yaml';
 import postcss from 'postcss';
 import * as terser from 'terser';
 
 import { build as buildLocales } from '../locales/index.js';
 import generateDTS from '../locales/generateDTS.js';
-import meta from '../package.json' assert { type: "json" };
+import meta from '../package.json' with { type: "json" };
+import buildTarball from './tarball.mjs';
+
+const configDir = fileURLToPath(new URL('../.config', import.meta.url));
+const configPath = process.env.MISSKEY_CONFIG_YML
+	? path.resolve(configDir, process.env.MISSKEY_CONFIG_YML)
+	: process.env.NODE_ENV === 'test'
+		? path.resolve(configDir, 'test.yml')
+		: path.resolve(configDir, 'default.yml');
 
 let locales = buildLocales();
+
+async function loadConfig() {
+	return fs.readFile(configPath, 'utf-8').then(data => yaml.load(data)).catch(() => null);
+}
 
 async function copyFrontendFonts() {
   await fs.cp('./packages/frontend/node_modules/three/examples/fonts', './built/_frontend_dist_/fonts', { dereference: true, recursive: true });
 }
 
 async function copyFrontendTablerIcons() {
-  await fs.cp('./packages/frontend/node_modules/@tabler/icons-webfont', './built/_frontend_dist_/tabler-icons', { dereference: true, recursive: true });
+  await fs.cp('./packages/frontend/node_modules/@tabler/icons-webfont/dist', './built/_frontend_dist_/tabler-icons', { dereference: true, recursive: true });
 }
 
 async function copyFrontendLocales() {
@@ -35,13 +49,6 @@ async function copyFrontendLocales() {
   }
 }
 
-async function copyFrontendShikiAssets() {
-  await fs.cp('./packages/frontend/node_modules/shiki/dist', './built/_frontend_dist_/shiki/dist', { dereference: true, recursive: true });
-  await fs.cp('./packages/frontend/node_modules/shiki/languages', './built/_frontend_dist_/shiki/languages', { dereference: true, recursive: true });
-  await fs.cp('./packages/frontend/node_modules/aiscript-vscode/aiscript/syntaxes', './built/_frontend_dist_/shiki/languages', { dereference: true, recursive: true });
-  await fs.cp('./packages/frontend/node_modules/shiki/themes', './built/_frontend_dist_/shiki/themes', { dereference: true, recursive: true });
-}
-
 async function copyBackendViews() {
   await fs.cp('./packages/backend/src/server/web/views', './packages/backend/built/server/web/views', { recursive: true });
 }
@@ -51,6 +58,7 @@ async function buildBackendScript() {
 
   for (const file of [
     './packages/backend/src/server/web/boot.js',
+    './packages/backend/src/server/web/boot.embed.js',
     './packages/backend/src/server/web/bios.js',
     './packages/backend/src/server/web/cli.js'
   ]) {
@@ -66,6 +74,7 @@ async function buildBackendStyle() {
 
   for (const file of [
     './packages/backend/src/server/web/style.css',
+    './packages/backend/src/server/web/style.embed.css',
     './packages/backend/src/server/web/bios.css',
     './packages/backend/src/server/web/cli.css',
     './packages/backend/src/server/web/error.css'
@@ -81,16 +90,16 @@ async function build() {
     copyFrontendFonts(),
     copyFrontendTablerIcons(),
     copyFrontendLocales(),
-    copyFrontendShikiAssets(),
     copyBackendViews(),
     buildBackendScript(),
     buildBackendStyle(),
+		loadConfig().then(config => config?.publishTarballInsteadOfProvideRepositoryUrl && buildTarball()),
   ]);
 }
 
 await build();
 
-if (process.argv.includes("--watch")) {
+if (process.argv.includes('--watch')) {
 	const watcher = fs.watch('./locales');
 	for await (const event of watcher) {
 		const filename = event.filename?.replaceAll('\\', '/');

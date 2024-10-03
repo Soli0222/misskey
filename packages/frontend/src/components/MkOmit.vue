@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -27,7 +27,7 @@ const omitted = ref(false);
 const ignoreOmit = ref(false);
 
 const calcOmit = () => {
-	if (omitted.value || ignoreOmit.value) return;
+	if (omitted.value || ignoreOmit.value || content.value == null) return;
 	omitted.value = content.value.offsetHeight > props.maxHeight;
 };
 
@@ -37,7 +37,7 @@ const omitObserver = new ResizeObserver((entries, observer) => {
 
 onMounted(() => {
 	calcOmit();
-	omitObserver.observe(content.value);
+	omitObserver.observe(content.value as HTMLElement);
 });
 
 onUnmounted(() => {
@@ -62,7 +62,7 @@ onUnmounted(() => {
 			left: 0;
 			width: 100%;
 			height: 64px;
-			background: linear-gradient(0deg, var(--panel), var(--X15));
+			background: linear-gradient(0deg, var(--panel), color(from var(--panel) srgb r g b / 0));
 
 			> .fadeLabel {
 				display: inline-block;

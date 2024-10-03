@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -133,7 +133,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 									<a href="https://misskey-hub.net/docs/for-users/" target="_blank" class="_link">{{ i18n.ts.help }}</a>
 								</template>
 							</I18n>
-							<div>{{ i18n.t('_initialAccountSetting.haveFun', { name: instance.name ?? host }) }}</div>
+							<div>{{ i18n.tsx._initialAccountSetting.haveFun({ name: instance.name ?? host }) }}</div>
 							<div class="_buttonsCenter" style="margin-top: 16px;">
 								<MkButton v-if="initialPage !== 4" rounded @click="page--"><i class="ti ti-arrow-left"></i> {{ i18n.ts.goBack }}</MkButton>
 								<MkButton rounded primary gradate @click="close(false)">{{ i18n.ts.close }}</MkButton>
@@ -158,7 +158,7 @@ import XSensitive from '@/components/MkTutorialDialog.Sensitive.vue';
 import MkAnimBg from '@/components/MkAnimBg.vue';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
-import { host } from '@/config.js';
+import { host } from '@@/js/config.js';
 import { claimAchievement } from '@/scripts/achievements.js';
 import * as os from '@/os.js';
 
@@ -172,7 +172,7 @@ const emit = defineEmits<{
 
 const dialog = shallowRef<InstanceType<typeof MkModalWindow>>();
 
-// eslint-disable-next-line vue/no-setup-props-destructure
+// eslint-disable-next-line vue/no-setup-props-reactivity-loss
 const page = ref(props.initialPage ?? 0);
 
 watch(page, (to) => {

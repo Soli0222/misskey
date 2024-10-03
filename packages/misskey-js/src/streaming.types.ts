@@ -2,11 +2,13 @@ import {
 	Antenna,
 	DriveFile,
 	DriveFolder,
-	MeDetailed,
 	Note,
 	Notification,
 	Signin,
 	User,
+	UserDetailed,
+	UserDetailedNotMe,
+	UserLite,
 } from './autogen/models.js';
 import {
 	AnnouncementCreated,
@@ -17,7 +19,16 @@ import {
 	QueueStatsLog,
 	ServerStats,
 	ServerStatsLog,
+	ReversiGameDetailed,
 } from './entities.js';
+import {
+	ReversiUpdateKey,
+} from './consts.js';
+
+type ReversiUpdateSettings<K extends ReversiUpdateKey> = {
+	key: K;
+	value: ReversiGameDetailed[K];
+};
 
 export type Channels = {
 	main: {
@@ -27,16 +38,17 @@ export type Channels = {
 			mention: (payload: Note) => void;
 			reply: (payload: Note) => void;
 			renote: (payload: Note) => void;
-			follow: (payload: User) => void; // 自分が他人をフォローしたとき
-			followed: (payload: User) => void; // 他人が自分をフォローしたとき
-			unfollow: (payload: User) => void; // 自分が他人をフォロー解除したとき
-			meUpdated: (payload: MeDetailed) => void;
+			follow: (payload: UserDetailedNotMe) => void; // 自分が他人をフォローしたとき
+			followed: (payload: UserDetailed | UserLite) => void; // 他人が自分をフォローしたとき
+			unfollow: (payload: UserDetailed) => void; // 自分が他人をフォロー解除したとき
+			meUpdated: (payload: UserDetailed) => void;
 			pageEvent: (payload: PageEvent) => void;
 			urlUploadFinished: (payload: { marker: string; file: DriveFile; }) => void;
 			readAllNotifications: () => void;
 			unreadNotification: (payload: Notification) => void;
 			unreadMention: (payload: Note['id']) => void;
 			readAllUnreadMentions: () => void;
+			notificationFlushed: () => void;
 			unreadSpecifiedNote: (payload: Note['id']) => void;
 			readAllUnreadSpecifiedNotes: () => void;
 			readAllAntennas: () => void;
@@ -47,6 +59,7 @@ export type Channels = {
 			registryUpdated: (payload: {
 				scope?: string[];
 				key: string;
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				value: any | null;
 			}) => void;
 			driveFileCreated: (payload: DriveFile) => void;
@@ -102,6 +115,7 @@ export type Channels = {
 		params: {
 			listId: string;
 			withFiles?: boolean;
+			withRenotes?: boolean;
 		};
 		events: {
 			note: (payload: Note) => void;
@@ -110,7 +124,7 @@ export type Channels = {
 	};
 	hashtag: {
 		params: {
-			q?: string;
+			q: string[][];
 		};
 		events: {
 			note: (payload: Note) => void;
@@ -152,7 +166,7 @@ export type Channels = {
 			fileUpdated: (payload: DriveFile) => void;
 			folderCreated: (payload: DriveFolder) => void;
 			folderDeleted: (payload: DriveFolder['id']) => void;
-			folderUpdated: (payload: DriveFile) => void;
+			folderUpdated: (payload: DriveFolder) => void;
 		};
 		receives: null;
 	};
@@ -193,10 +207,33 @@ export type Channels = {
 			}
 		};
 		receives: null;
+	};
+	reversiGame: {
+		params: {
+			gameId: string;
+		};
+		events: {
+			started: (payload: { game: ReversiGameDetailed; }) => void;
+			ended: (payload: { winnerId: User['id'] | null; game: ReversiGameDetailed; }) => void;
+			canceled: (payload: { userId: User['id']; }) => void;
+			changeReadyStates: (payload: { user1: boolean; user2: boolean; }) => void;
+			updateSettings: <K extends ReversiUpdateKey>(payload: { userId: User['id']; key: K; value: ReversiGameDetailed[K]; }) => void;
+			log: (payload: Record<string, unknown>) => void;
+		};
+		receives: {
+			putStone: {
+				pos: number;
+				id: string;
+			};
+			ready: boolean;
+			cancel: null | Record<string, never>;
+			updateSettings: ReversiUpdateSettings<ReversiUpdateKey>;
+			claimTimeIsUp: null | Record<string, never>;
+		}
 	}
 };
 
-export type NoteUpdatedEvent = {
+export type NoteUpdatedEvent = { id: Note['id'] } & ({
 	type: 'reacted';
 	body: {
 		reaction: string;
@@ -220,7 +257,7 @@ export type NoteUpdatedEvent = {
 		choice: number;
 		userId: User['id'];
 	};
-};
+});
 
 export type BroadcastEvents = {
 	noteUpdated: (payload: NoteUpdatedEvent) => void;

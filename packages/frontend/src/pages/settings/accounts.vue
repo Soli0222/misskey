@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -74,22 +74,24 @@ async function removeAccount(account) {
 }
 
 function addExistingAccount() {
-	os.popup(defineAsyncComponent(() => import('@/components/MkSigninDialog.vue')), {}, {
+	const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkSigninDialog.vue')), {}, {
 		done: async res => {
 			await addAccounts(res.id, res.i);
 			os.success();
 			init();
 		},
-	}, 'closed');
+		closed: () => dispose(),
+	});
 }
 
 function createAccount() {
-	os.popup(defineAsyncComponent(() => import('@/components/MkSignupDialog.vue')), {}, {
+	const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkSignupDialog.vue')), {}, {
 		done: async res => {
 			await addAccounts(res.id, res.i);
 			switchAccountWithToken(res.i);
 		},
-	}, 'closed');
+		closed: () => dispose(),
+	});
 }
 
 async function switchAccount(account: any) {
@@ -106,10 +108,10 @@ const headerActions = computed(() => []);
 
 const headerTabs = computed(() => []);
 
-definePageMetadata({
+definePageMetadata(() => ({
 	title: i18n.ts.accounts,
 	icon: 'ti ti-users',
-});
+}));
 </script>
 
 <style lang="scss" module>

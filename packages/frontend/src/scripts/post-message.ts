@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: syuilo and other misskey contributors
+ * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
@@ -18,7 +18,7 @@ export type MiPostMessageEvent = {
  * 親フレームにイベントを送信
  */
 export function postMessageToParentWindow(type: PostMessageEventType, payload?: any): void {
-	window.postMessage({
+	window.parent.postMessage({
 		type,
 		payload,
 	}, '*');

@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -43,10 +43,10 @@ export default defineComponent({
 	setup(props, { slots, expose }) {
 		const $style = useCssModule(); // カスタムレンダラなので使っても大丈夫
 
-		function getDateText(time: string) {
-			const date = new Date(time).getDate();
-			const month = new Date(time).getMonth() + 1;
-			return i18n.t('monthAndDay', {
+		function getDateText(dateInstance: Date) {
+			const date = dateInstance.getDate();
+			const month = dateInstance.getMonth() + 1;
+			return i18n.tsx.monthAndDay({
 				month: month.toString(),
 				day: date.toString(),
 			});
@@ -62,9 +62,16 @@ export default defineComponent({
 			})[0];
 			if (el.key == null && item.id) el.key = item.id;
 
+			const date = new Date(item.createdAt);
+			const nextDate = props.items[i + 1] ? new Date(props.items[i + 1].createdAt) : null;
+
 			if (
 				i !== props.items.length - 1 &&
-				new Date(item.createdAt).getDate() !== new Date(props.items[i + 1].createdAt).getDate()
+				nextDate != null && (
+					date.getFullYear() !== nextDate.getFullYear() ||
+					date.getMonth() !== nextDate.getMonth() ||
+					date.getDate() !== nextDate.getDate()
+				)
 			) {
 				const separator = h('div', {
 					class: $style['separator'],
@@ -78,12 +85,12 @@ export default defineComponent({
 						h('i', {
 							class: `ti ti-chevron-up ${$style['date-1-icon']}`,
 						}),
-						getDateText(item.createdAt),
+						getDateText(date),
 					]),
 					h('span', {
 						class: $style['date-2'],
 					}, [
-						getDateText(props.items[i + 1].createdAt),
+						getDateText(nextDate),
 						h('i', {
 							class: `ti ti-chevron-down ${$style['date-2-icon']}`,
 						}),
@@ -118,34 +125,36 @@ export default defineComponent({
 			return children;
 		};
 
-		function onBeforeLeave(el: HTMLElement) {
+		function onBeforeLeave(element: Element) {
+			const el = element as HTMLElement;
 			el.style.top = `${el.offsetTop}px`;
 			el.style.left = `${el.offsetLeft}px`;
 		}
 
-		function onLeaveCanceled(el: HTMLElement) {
+		function onLeaveCancelled(element: Element) {
+			const el = element as HTMLElement;
 			el.style.top = '';
 			el.style.left = '';
 		}
 
-		return () => h(
-			defaultStore.state.animation ? TransitionGroup : 'div',
-			{
-				class: {
-					[$style['date-separated-list']]: true,
-					[$style['date-separated-list-nogap']]: props.noGap,
-					[$style['reversed']]: props.reversed,
-					[$style['direction-down']]: props.direction === 'down',
-					[$style['direction-up']]: props.direction === 'up',
-				},
-				...(defaultStore.state.animation ? {
-					name: 'list',
-					tag: 'div',
-					onBeforeLeave,
-					onLeaveCanceled,
-				} : {}),
-			},
-			{ default: renderChildren });
+		// eslint-disable-next-line vue/no-setup-props-reactivity-loss
+		const classes = {
+			[$style['date-separated-list']]: true,
+			[$style['date-separated-list-nogap']]: props.noGap,
+			[$style['reversed']]: props.reversed,
+			[$style['direction-down']]: props.direction === 'down',
+			[$style['direction-up']]: props.direction === 'up',
+		};
+
+		return () => defaultStore.state.animation ? h(TransitionGroup, {
+			class: classes,
+			name: 'list',
+			tag: 'div',
+			onBeforeLeave,
+			onLeaveCancelled,
+		}, { default: renderChildren }) : h('div', {
+			class: classes,
+		}, { default: renderChildren });
 	},
 });
 </script>

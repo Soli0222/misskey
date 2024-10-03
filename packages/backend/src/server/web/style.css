@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: syuilo and other misskey contributors
+ * SPDX-FileCopyrightText: syuilo and misskey-project
  *
  * SPDX-License-Identifier: AGPL-3.0-only
  */
@@ -47,6 +47,7 @@ html {
 	transform: translateY(70px);
 	color: var(--accent);
 }
+
 #splashSpinner > .spinner {
 	position: absolute;
 	top: 0;

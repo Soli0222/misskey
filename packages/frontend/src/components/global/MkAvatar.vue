@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -26,8 +26,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<template v-if="showDecoration">
 		<img
 			v-for="decoration in decorations ?? user.avatarDecorations"
-			:class="[$style.decoration]"
-			:src="decoration.url"
+			:class="[$style.decoration, { [$style.decorationBlink]: decoration.blink }]"
+			:src="getDecorationUrl(decoration)"
 			:style="{
 				rotate: getDecorationAngle(decoration),
 				scale: getDecorationScale(decoration),
@@ -42,10 +42,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script lang="ts" setup>
 import { watch, ref, computed } from 'vue';
 import * as Misskey from 'misskey-js';
+import { extractAvgColorFromBlurhash } from '@@/js/extract-avg-color-from-blurhash.js';
 import MkImgWithBlurhash from '../MkImgWithBlurhash.vue';
 import MkA from './MkA.vue';
 import { getStaticImageUrl } from '@/scripts/media-proxy.js';
-import { extractAvgColorFromBlurhash } from '@/scripts/extract-avg-color-from-blurhash.js';
 import { acct, userPage } from '@/filters/user.js';
 import MkUserOnlineIndicator from '@/components/MkUserOnlineIndicator.vue';
 import { defaultStore } from '@/store.js';
@@ -60,7 +60,7 @@ const props = withDefaults(defineProps<{
 	link?: boolean;
 	preview?: boolean;
 	indicator?: boolean;
-	decorations?: Omit<Misskey.entities.UserDetailed['avatarDecorations'][number], 'id'>[];
+	decorations?: (Omit<Misskey.entities.UserDetailed['avatarDecorations'][number], 'id'> & { blink?: boolean; })[];
 	forceShowDecoration?: boolean;
 }>(), {
 	target: null,
@@ -81,13 +81,20 @@ const bound = computed(() => props.link
 	? { to: userPage(props.user), target: props.target }
 	: {});
 
-const url = computed(() => (defaultStore.state.disableShowingAnimatedImages || defaultStore.state.dataSaver.avatar)
-	? getStaticImageUrl(props.user.avatarUrl)
-	: props.user.avatarUrl);
+const url = computed(() => {
+	if (props.user.avatarUrl == null) return null;
+	if (defaultStore.state.disableShowingAnimatedImages || defaultStore.state.dataSaver.avatar) return getStaticImageUrl(props.user.avatarUrl);
+	return props.user.avatarUrl;
+});
 
 function onClick(ev: MouseEvent): void {
 	if (props.link) return;
 	emit('click', ev);
+}
+
+function getDecorationUrl(decoration: Omit<Misskey.entities.UserDetailed['avatarDecorations'][number], 'id'>) {
+	if (defaultStore.state.disableShowingAnimatedImages || defaultStore.state.dataSaver.avatar) return getStaticImageUrl(decoration.url);
+	return decoration.url;
 }
 
 function getDecorationAngle(decoration: Omit<Misskey.entities.UserDetailed['avatarDecorations'][number], 'id'>) {
@@ -109,6 +116,7 @@ function getDecorationOffset(decoration: Omit<Misskey.entities.UserDetailed['ava
 const color = ref<string | undefined>();
 
 watch(() => props.user.avatarBlurhash, () => {
+	if (props.user.avatarBlurhash == null) return;
 	color.value = extractAvgColorFromBlurhash(props.user.avatarBlurhash);
 }, {
 	immediate: true,
@@ -321,5 +329,18 @@ watch(() => props.user.avatarBlurhash, () => {
 	left: -50%;
 	width: 200%;
 	pointer-events: none;
+}
+
+.decorationBlink {
+	animation: blink 1s infinite;
+}
+
+@keyframes blink {
+	0%, 100% {
+		filter: brightness(2);
+	}
+	50% {
+		filter: brightness(1);
+	}
 }
 </style>

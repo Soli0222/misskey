@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -138,7 +138,7 @@ function onStats(connStats: Misskey.entities.ServerStats) {
 }
 
 function onStatsLog(statsLog: Misskey.entities.ServerStatsLog) {
-	for (const revStats of statsLog.reverse()) {
+	for (const revStats of statsLog.toReversed()) {
 		onStats(revStats);
 	}
 }

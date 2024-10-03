@@ -1,12 +1,12 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
 <template>
 <div>
 	<div v-if="!loading" class="_gaps">
-		<MkInfo>{{ i18n.t('_profile.avatarDecorationMax', { max: $i.policies.avatarDecorationLimit }) }} ({{ i18n.t('remainingN', { n: $i.policies.avatarDecorationLimit - $i.avatarDecorations.length }) }})</MkInfo>
+		<MkInfo>{{ i18n.tsx._profile.avatarDecorationMax({ max: $i.policies.avatarDecorationLimit }) }} ({{ i18n.tsx.remainingN({ n: $i.policies.avatarDecorationLimit - $i.avatarDecorations.length }) }})</MkInfo>
 
 		<MkAvatar :class="$style.avatar" :user="$i" forceShowDecoration/>
 
@@ -67,7 +67,7 @@ misskeyApi('get-avatar-decorations').then(_avatarDecorations => {
 });
 
 function openDecoration(avatarDecoration, index?: number) {
-	os.popup(defineAsyncComponent(() => import('./avatar-decoration.dialog.vue')), {
+	const { dispose } = os.popup(defineAsyncComponent(() => import('./avatar-decoration.dialog.vue')), {
 		decoration: avatarDecoration,
 		usingIndex: index,
 	}, {
@@ -108,7 +108,8 @@ function openDecoration(avatarDecoration, index?: number) {
 			});
 			$i.avatarDecorations = update;
 		},
-	}, 'closed');
+		closed: () => dispose(),
+	});
 }
 
 function detachAllDecorations() {
@@ -128,10 +129,10 @@ const headerActions = computed(() => []);
 
 const headerTabs = computed(() => []);
 
-definePageMetadata({
+definePageMetadata(() => ({
 	title: i18n.ts.avatarDecorations,
 	icon: 'ti ti-sparkles',
-});
+}));
 </script>
 
 <style lang="scss" module>

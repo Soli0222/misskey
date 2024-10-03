@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -7,15 +7,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div ref="el" class="hiyeyicy" :class="{ wide: !narrow }">
 	<div v-if="!narrow || currentPage?.route.name == null" class="nav">
 		<MkSpacer :contentMax="700" :marginMin="16">
-			<div class="lxpfedzu">
+			<div class="lxpfedzu _gaps">
 				<div class="banner">
 					<img :src="instance.iconUrl || '/favicon.ico'" alt="" class="icon"/>
 				</div>
 
-				<MkInfo v-if="thereIsUnresolvedAbuseReport" warn class="info">{{ i18n.ts.thereIsUnresolvedAbuseReportWarning }} <MkA to="/admin/abuses" class="_link">{{ i18n.ts.check }}</MkA></MkInfo>
-				<MkInfo v-if="noMaintainerInformation" warn class="info">{{ i18n.ts.noMaintainerInformationWarning }} <MkA to="/admin/settings" class="_link">{{ i18n.ts.configure }}</MkA></MkInfo>
-				<MkInfo v-if="noBotProtection" warn class="info">{{ i18n.ts.noBotProtectionWarning }} <MkA to="/admin/security" class="_link">{{ i18n.ts.configure }}</MkA></MkInfo>
-				<MkInfo v-if="noEmailServer" warn class="info">{{ i18n.ts.noEmailServerWarning }} <MkA to="/admin/email-settings" class="_link">{{ i18n.ts.configure }}</MkA></MkInfo>
+				<div class="_gaps_s">
+					<MkInfo v-if="thereIsUnresolvedAbuseReport" warn>{{ i18n.ts.thereIsUnresolvedAbuseReportWarning }} <MkA to="/admin/abuses" class="_link">{{ i18n.ts.check }}</MkA></MkInfo>
+					<MkInfo v-if="noMaintainerInformation" warn>{{ i18n.ts.noMaintainerInformationWarning }} <MkA to="/admin/settings" class="_link">{{ i18n.ts.configure }}</MkA></MkInfo>
+					<MkInfo v-if="noInquiryUrl" warn>{{ i18n.ts.noInquiryUrlWarning }} <MkA to="/admin/moderation" class="_link">{{ i18n.ts.configure }}</MkA></MkInfo>
+					<MkInfo v-if="noBotProtection" warn>{{ i18n.ts.noBotProtectionWarning }} <MkA to="/admin/security" class="_link">{{ i18n.ts.configure }}</MkA></MkInfo>
+					<MkInfo v-if="noEmailServer" warn>{{ i18n.ts.noEmailServerWarning }} <MkA to="/admin/email-settings" class="_link">{{ i18n.ts.configure }}</MkA></MkInfo>
+				</div>
 
 				<MkSuperMenu :def="menuDef" :grid="narrow"></MkSuperMenu>
 			</div>
@@ -28,16 +31,17 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { ComputedRef, Ref, onActivated, onMounted, onUnmounted, provide, watch, ref, computed } from 'vue';
+import { onActivated, onMounted, onUnmounted, provide, watch, ref, computed } from 'vue';
 import { i18n } from '@/i18n.js';
 import MkSuperMenu from '@/components/MkSuperMenu.vue';
 import MkInfo from '@/components/MkInfo.vue';
 import { instance } from '@/instance.js';
+import { lookup } from '@/scripts/lookup.js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/scripts/misskey-api.js';
-import { lookupUser, lookupUserByEmail } from '@/scripts/lookup-user.js';
-import { PageMetadata, definePageMetadata, provideMetadataReceiver } from '@/scripts/page-metadata.js';
-import { useRouter } from '@/global/router/supplier.js';
+import { lookupUser, lookupUserByEmail, lookupFile } from '@/scripts/admin-lookup.js';
+import { PageMetadata, definePageMetadata, provideMetadataReceiver, provideReactiveMetadata } from '@/scripts/page-metadata.js';
+import { useRouter } from '@/router/supplier.js';
 
 const isEmpty = (x: string | null) => x == null || x === '';
 
@@ -52,14 +56,15 @@ const indexInfo = {
 provide('shouldOmitHeaderTitle', false);
 
 const INFO = ref(indexInfo);
-const childInfo: Ref<ComputedRef<PageMetadata> | null> = ref(null);
+const childInfo = ref<null | PageMetadata>(null);
 const narrow = ref(false);
 const view = ref(null);
 const el = ref<HTMLDivElement | null>(null);
 const pageProps = ref({});
-let noMaintainerInformation = isEmpty(instance.maintainerName) || isEmpty(instance.maintainerEmail);
-let noBotProtection = !instance.disableRegistration && !instance.enableHcaptcha && !instance.enableRecaptcha && !instance.enableTurnstile;
-let noEmailServer = !instance.enableEmail;
+const noMaintainerInformation = computed(() => isEmpty(instance.maintainerName) || isEmpty(instance.maintainerEmail));
+const noBotProtection = computed(() => !instance.disableRegistration && !instance.enableHcaptcha && !instance.enableRecaptcha && !instance.enableTurnstile && !instance.enableMcaptcha);
+const noEmailServer = computed(() => !instance.enableEmail);
+const noInquiryUrl = computed(() => isEmpty(instance.inquiryUrl));
 const thereIsUnresolvedAbuseReport = ref(false);
 const currentPage = computed(() => router.currentRef.value.child);
 
@@ -82,7 +87,7 @@ const menuDef = computed(() => [{
 		type: 'button',
 		icon: 'ti ti-search',
 		text: i18n.ts.lookup,
-		action: lookup,
+		action: adminLookup,
 	}, ...(instance.disableRegistration ? [{
 		type: 'button',
 		icon: 'ti ti-user-plus',
@@ -195,25 +200,20 @@ const menuDef = computed(() => [{
 		to: '/admin/relays',
 		active: currentPage.value?.route.name === 'relays',
 	}, {
-		icon: 'ti ti-ban',
-		text: i18n.ts.instanceBlocking,
-		to: '/admin/instance-block',
-		active: currentPage.value?.route.name === 'instance-block',
-	}, {
-		icon: 'ti ti-ghost',
-		text: i18n.ts.proxyAccount,
-		to: '/admin/proxy-account',
-		active: currentPage.value?.route.name === 'proxy-account',
-	}, {
 		icon: 'ti ti-link',
 		text: i18n.ts.externalServices,
 		to: '/admin/external-services',
 		active: currentPage.value?.route.name === 'external-services',
 	}, {
-		icon: 'ti ti-adjustments',
-		text: i18n.ts.other,
-		to: '/admin/other-settings',
-		active: currentPage.value?.route.name === 'other-settings',
+		icon: 'ti ti-webhook',
+		text: 'Webhook',
+		to: '/admin/system-webhook',
+		active: currentPage.value?.route.name === 'system-webhook',
+	}, {
+		icon: 'ti ti-bolt',
+		text: i18n.ts.performance,
+		to: '/admin/performance',
+		active: currentPage.value?.route.name === 'performance',
 	}],
 }, {
 	title: i18n.ts.info,
@@ -225,25 +225,22 @@ const menuDef = computed(() => [{
 	}],
 }]);
 
-watch(narrow.value, () => {
-	if (currentPage.value?.route.name == null && !narrow.value) {
-		router.push('/admin/overview');
-	}
-});
-
 onMounted(() => {
-	ro.observe(el.value);
-
-	narrow.value = el.value.offsetWidth < NARROW_THRESHOLD;
+	if (el.value != null) {
+		ro.observe(el.value);
+		narrow.value = el.value.offsetWidth < NARROW_THRESHOLD;
+	}
 	if (currentPage.value?.route.name == null && !narrow.value) {
-		router.push('/admin/overview');
+		router.replace('/admin/overview');
 	}
 });
 
 onActivated(() => {
-	narrow.value = el.value.offsetWidth < NARROW_THRESHOLD;
+	if (el.value != null) {
+		narrow.value = el.value.offsetWidth < NARROW_THRESHOLD;
+	}
 	if (currentPage.value?.route.name == null && !narrow.value) {
-		router.push('/admin/overview');
+		router.replace('/admin/overview');
 	}
 });
 
@@ -257,14 +254,16 @@ watch(router.currentRef, (to) => {
 	}
 });
 
-provideMetadataReceiver((info) => {
+provideMetadataReceiver((metadataGetter) => {
+	const info = metadataGetter();
 	if (info == null) {
 		childInfo.value = null;
 	} else {
 		childInfo.value = info;
-		INFO.value.needWideArea = info.value.needWideArea ?? undefined;
+		INFO.value.needWideArea = info.needWideArea ?? undefined;
 	}
 });
+provideReactiveMetadata(INFO);
 
 function invite() {
 	misskeyApi('admin/invite/create').then(x => {
@@ -280,7 +279,7 @@ function invite() {
 	});
 }
 
-function lookup(ev: MouseEvent) {
+function adminLookup(ev: MouseEvent) {
 	os.popupMenu([{
 		text: i18n.ts.user,
 		icon: 'ti ti-user',
@@ -294,22 +293,16 @@ function lookup(ev: MouseEvent) {
 			lookupUserByEmail();
 		},
 	}, {
-		text: i18n.ts.note,
-		icon: 'ti ti-pencil',
-		action: () => {
-			alert('TODO');
-		},
-	}, {
 		text: i18n.ts.file,
 		icon: 'ti ti-cloud',
 		action: () => {
-			alert('TODO');
+			lookupFile();
 		},
 	}, {
-		text: i18n.ts.instance,
-		icon: 'ti ti-planet',
+		text: i18n.ts.lookup,
+		icon: 'ti ti-world-search',
 		action: () => {
-			alert('TODO');
+			lookup();
 		},
 	}], ev.currentTarget ?? ev.target);
 }
@@ -318,7 +311,7 @@ const headerActions = computed(() => []);
 
 const headerTabs = computed(() => []);
 
-definePageMetadata(INFO.value);
+definePageMetadata(() => INFO.value);
 
 defineExpose({
 	header: {
@@ -351,10 +344,6 @@ defineExpose({
 
 	> .nav {
 		.lxpfedzu {
-			> .info {
-				margin: 16px 0;
-			}
-
 			> .banner {
 				margin: 16px;
 

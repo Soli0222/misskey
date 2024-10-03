@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: syuilo and other misskey contributors
+ * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
@@ -149,7 +149,7 @@ export class SearchService {
 
 	@bindThis
 	public async unindexNote(note: MiNote): Promise<void> {
-		if (!['home', 'public'].includes(note.visibility)) return;
+		//if (!['home', 'public'].includes(note.visibility)) return;
 
 		if (this.meilisearch) {
 			this.meilisearchNoteIndex!.deleteDocument(note.id);

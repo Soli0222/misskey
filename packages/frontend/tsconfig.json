@@ -23,7 +23,8 @@
 		"useDefineForClassFields": true,
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["./src/*"]
+			"@/*": ["./src/*"],
+			"@@/*": ["../frontend-shared/*"]
 		},
 		"typeRoots": [
 			"./@types",
@@ -33,16 +34,17 @@
 		],
 		"types": [
 			"vite/client",
+			"vitest/importMeta",
 		],
 		"lib": [
 			"esnext",
-			"dom"
+			"dom",
+			"dom.iterable"
 		],
 		"jsx": "preserve"
 	},
 	"compileOnSave": false,
 	"include": [
-		".eslintrc.js",
 		"./**/*.ts",
 		"./**/*.vue"
 	],

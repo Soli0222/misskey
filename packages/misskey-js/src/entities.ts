@@ -1,15 +1,39 @@
 import { ModerationLogPayloads } from './consts.js';
-import { Announcement, EmojiDetailed, MeDetailed, MeDetailedOnly, Page, User, UserDetailed } from './autogen/models';
+import {
+	Announcement,
+	EmojiDetailed,
+	MeDetailed,
+	Note,
+	Page,
+	Role,
+	RolePolicies,
+	User,
+	UserDetailedNotMe,
+} from './autogen/models.js';
 
-export * from './autogen/entities';
-export * from './autogen/models';
+export * from './autogen/entities.js';
+export * from './autogen/models.js';
 
 export type ID = string;
 export type DateString = string;
 
+type NonNullableRecord<T> = {
+	[P in keyof T]-?: NonNullable<T[P]>;
+};
+type AllNullRecord<T> = {
+	[P in keyof T]: null;
+};
+
+export type PureRenote =
+	Omit<Note, 'renote' | 'renoteId' | 'reply' | 'replyId' | 'text' | 'cw' | 'files' | 'fileIds' | 'poll'>
+	& AllNullRecord<Pick<Note, 'reply' | 'replyId' | 'text' | 'cw' | 'poll'>>
+	& { files: []; fileIds: []; }
+	& NonNullableRecord<Pick<Note, 'renote' | 'renoteId'>>;
+
 export type PageEvent = {
 	pageId: Page['id'];
 	event: string;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	var: any;
 	userId: User['id'];
 	user: User;
@@ -19,7 +43,7 @@ export type ModerationLog = {
 	id: ID;
 	createdAt: DateString;
 	userId: User['id'];
-	user: UserDetailed | null;
+	user: UserDetailedNotMe | null;
 } & ({
 	type: 'updateServerSettings';
 	info: ModerationLogPayloads['updateServerSettings'];
@@ -96,6 +120,9 @@ export type ModerationLog = {
 	type: 'unsuspendRemoteInstance';
 	info: ModerationLogPayloads['unsuspendRemoteInstance'];
 } | {
+	type: 'updateRemoteInstanceNote';
+	info: ModerationLogPayloads['updateRemoteInstanceNote'];
+} | {
 	type: 'markSensitiveDriveFile';
 	info: ModerationLogPayloads['markSensitiveDriveFile'];
 } | {
@@ -131,6 +158,36 @@ export type ModerationLog = {
 } | {
 	type: 'unsetUserBanner';
 	info: ModerationLogPayloads['unsetUserBanner'];
+} | {
+	type: 'createSystemWebhook';
+	info: ModerationLogPayloads['createSystemWebhook'];
+} | {
+	type: 'updateSystemWebhook';
+	info: ModerationLogPayloads['updateSystemWebhook'];
+} | {
+	type: 'deleteSystemWebhook';
+	info: ModerationLogPayloads['deleteSystemWebhook'];
+} | {
+	type: 'createAbuseReportNotificationRecipient';
+	info: ModerationLogPayloads['createAbuseReportNotificationRecipient'];
+} | {
+	type: 'updateAbuseReportNotificationRecipient';
+	info: ModerationLogPayloads['updateAbuseReportNotificationRecipient'];
+} | {
+	type: 'deleteAbuseReportNotificationRecipient';
+	info: ModerationLogPayloads['deleteAbuseReportNotificationRecipient'];
+} | {
+	type: 'deleteAccount';
+	info: ModerationLogPayloads['deleteAccount'];
+} | {
+	type: 'deletePage';
+	info: ModerationLogPayloads['deletePage'];
+} | {
+	type: 'deleteFlash';
+	info: ModerationLogPayloads['deleteFlash'];
+} | {
+	type: 'deleteGalleryPost';
+	info: ModerationLogPayloads['deleteGalleryPost'];
 });
 
 export type ServerStats = {
@@ -214,7 +271,22 @@ export type SigninRequest = {
 	token?: string;
 };
 
+export type SigninWithPasskeyRequest = {
+	credential?: object;
+	context?: string;
+};
+
+export type SigninWithPasskeyResponse = {
+	option?: object;
+	context?: string;
+	signinResponse?: SigninResponse;
+};
+
 export type SigninResponse = {
 	id: User['id'],
 	i: string,
 };
+
+type Values<T extends Record<PropertyKey, unknown>> = T[keyof T];
+
+export type PartialRolePolicyOverride = Partial<{[k in keyof RolePolicies]: Omit<Values<Role['policies']>, 'value'> & { value: RolePolicies[k] }}>;

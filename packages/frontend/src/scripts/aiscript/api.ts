@@ -1,17 +1,16 @@
 /*
- * SPDX-FileCopyrightText: syuilo and other misskey contributors
+ * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
 import { utils, values } from '@syuilo/aiscript';
+import * as Misskey from 'misskey-js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/scripts/misskey-api.js';
 import { $i } from '@/account.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { customEmojis } from '@/custom-emojis.js';
-import { url, lang } from '@/config.js';
-import { nyaize } from '@/scripts/nyaize.js';
-import { myaize } from '@/scripts/myaize.js';
+import { url, lang } from '@@/js/config.js';
 
 export function aiScriptReadline(q: string): Promise<string> {
 	return new Promise(ok => {
@@ -88,11 +87,15 @@ export function createAiScriptEnv(opts) {
 		}),
 		'Mk:nyaize': values.FN_NATIVE(([text]) => {
 			utils.assertString(text);
-			return values.STR(nyaize(text.value));
+			return values.STR(Misskey.nyaize(text.value));
 		}),
 		'Mk:myaize': values.FN_NATIVE(([text]) => {
 			utils.assertString(text);
-			return values.STR(myaize(text.value));
+			return values.STR(Misskey.myaize(text.value));
+		}),
+		'Mk:dlsize': values.FN_NATIVE(([text]) => {
+			utils.assertString(text);
+			return values.STR(Misskey.dlsize(text.value));
 		}),
 	};
 }

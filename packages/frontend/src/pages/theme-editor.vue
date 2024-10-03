@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -79,6 +79,8 @@ import tinycolor from 'tinycolor2';
 import { v4 as uuid } from 'uuid';
 import JSON5 from 'json5';
 
+import lightTheme from '@@/themes/_light.json5';
+import darkTheme from '@@/themes/_dark.json5';
 import MkButton from '@/components/MkButton.vue';
 import MkCodeEditor from '@/components/MkCodeEditor.vue';
 import MkTextarea from '@/components/MkTextarea.vue';
@@ -86,9 +88,7 @@ import MkFolder from '@/components/MkFolder.vue';
 
 import { $i } from '@/account.js';
 import { Theme, applyTheme } from '@/scripts/theme.js';
-import lightTheme from '@/themes/_light.json5';
-import darkTheme from '@/themes/_dark.json5';
-import { host } from '@/config.js';
+import { host } from '@@/js/config.js';
 import * as os from '@/os.js';
 import { ColdDeviceStorage, defaultStore } from '@/store.js';
 import { addTheme } from '@/theme-store.js';
@@ -190,7 +190,7 @@ function applyThemeCode() {
 async function saveAs() {
 	const { canceled, result: name } = await os.inputText({
 		title: i18n.ts.name,
-		allowEmpty: false,
+		minLength: 1,
 	});
 	if (canceled) return;
 
@@ -208,7 +208,7 @@ async function saveAs() {
 	changed.value = false;
 	os.alert({
 		type: 'success',
-		text: i18n.t('_theme.installed', { name: theme.value.name }),
+		text: i18n.tsx._theme.installed({ name: theme.value.name }),
 	});
 }
 
@@ -228,10 +228,10 @@ const headerActions = computed(() => [{
 
 const headerTabs = computed(() => []);
 
-definePageMetadata({
+definePageMetadata(() => ({
 	title: i18n.ts.themeEditor,
 	icon: 'ti ti-palette',
-});
+}));
 </script>
 
 <style lang="scss" scoped>

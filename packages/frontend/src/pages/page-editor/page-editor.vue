@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -69,14 +69,15 @@ import MkButton from '@/components/MkButton.vue';
 import MkSelect from '@/components/MkSelect.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
 import MkInput from '@/components/MkInput.vue';
-import { url } from '@/config.js';
+import { url } from '@@/js/config.js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/scripts/misskey-api.js';
 import { selectFile } from '@/scripts/select-file.js';
 import { i18n } from '@/i18n.js';
 import { definePageMetadata } from '@/scripts/page-metadata.js';
 import { $i } from '@/account.js';
-import { mainRouter } from '@/global/router/main.js';
+import { mainRouter } from '@/router/main.js';
+import { getPageBlockList } from '@/pages/page-editor/common.js';
 
 const props = defineProps<{
 	initPageId?: string;
@@ -101,7 +102,6 @@ const alignCenter = ref(false);
 const hideTitleWhenPinned = ref(false);
 
 provide('readonly', readonly.value);
-provide('getPageBlockList', getPageBlockList);
 
 watch(eyeCatchingImageId, async () => {
 	if (eyeCatchingImageId.value == null) {
@@ -175,7 +175,7 @@ function save() {
 function del() {
 	os.confirm({
 		type: 'warning',
-		text: i18n.t('removeAreYouSure', { x: title.value.trim() }),
+		text: i18n.tsx.removeAreYouSure({ x: title.value.trim() }),
 	}).then(({ canceled }) => {
 		if (canceled) return;
 		misskeyApi('pages/delete', {
@@ -214,15 +214,6 @@ async function add() {
 
 	const id = uuid();
 	content.value.push({ id, type });
-}
-
-function getPageBlockList() {
-	return [
-		{ value: 'section', text: i18n.ts._pages.blocks.section },
-		{ value: 'text', text: i18n.ts._pages.blocks.text },
-		{ value: 'image', text: i18n.ts._pages.blocks.image },
-		{ value: 'note', text: i18n.ts._pages.blocks.note },
-	];
 }
 
 function setEyeCatchingImage(img) {
@@ -284,17 +275,11 @@ const headerTabs = computed(() => [{
 	icon: 'ti ti-note',
 }]);
 
-definePageMetadata(computed(() => {
-	let title = i18n.ts._pages.newPage;
-	if (props.initPageId) {
-		title = i18n.ts._pages.editPage;
-	} else if (props.initPageName && props.initUser) {
-		title = i18n.ts._pages.readPage;
-	}
-	return {
-		title: title,
-		icon: 'ti ti-pencil',
-	};
+definePageMetadata(() => ({
+	title: props.initPageId ? i18n.ts._pages.editPage
+				: props.initPageName && props.initUser ? i18n.ts._pages.readPage
+				: i18n.ts._pages.newPage,
+	icon: 'ti ti-pencil',
 }));
 </script>
 

@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -65,18 +65,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<MkTextarea v-model="ad.memo">
 					<template #label>{{ i18n.ts.memo }}</template>
 				</MkTextarea>
-				<div class="buttons">
-					<MkButton class="button" inline primary style="margin-right: 12px;" @click="save(ad)">
+				<div class="_buttons">
+					<MkButton inline primary style="margin-right: 12px;" @click="save(ad)">
 						<i
 							class="ti ti-device-floppy"
 						></i> {{ i18n.ts.save }}
 					</MkButton>
-					<MkButton class="button" inline danger @click="remove(ad)">
+					<MkButton inline danger @click="remove(ad)">
 						<i class="ti ti-trash"></i> {{ i18n.ts.remove }}
 					</MkButton>
 				</div>
 			</div>
-			<MkButton class="button" @click="more()">
+			<MkButton @click="more()">
 				<i class="ti ti-reload"></i>{{ i18n.ts.more }}
 			</MkButton>
 		</div>
@@ -160,7 +160,7 @@ function add() {
 function remove(ad) {
 	os.confirm({
 		type: 'warning',
-		text: i18n.t('removeAreYouSure', { x: ad.url }),
+		text: i18n.tsx.removeAreYouSure({ x: ad.url }),
 	}).then(({ canceled }) => {
 		if (canceled) return;
 		ads.value = ads.value.filter(x => x !== ad);
@@ -255,10 +255,10 @@ const headerActions = computed(() => [{
 
 const headerTabs = computed(() => []);
 
-definePageMetadata({
+definePageMetadata(() => ({
 	title: i18n.ts.ads,
 	icon: 'ti ti-ad',
-});
+}));
 </script>
 
 <style lang="scss" module>

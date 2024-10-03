@@ -1,10 +1,10 @@
 /*
- * SPDX-FileCopyrightText: syuilo and other misskey contributors
+ * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
 import * as Misskey from 'misskey-js';
-import { host as localHost } from '@/config.js';
+import { host as localHost } from '@@/js/config.js';
 
 export async function genSearchQuery(v: any, q: string) {
 	let host: string;

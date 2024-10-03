@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: syuilo and other misskey contributors
+ * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
@@ -37,6 +37,11 @@ export const paramDef = {
 			},
 		},
 		sensitiveWords: {
+			type: 'array', nullable: true, items: {
+				type: 'string',
+			},
+		},
+		prohibitedWords: {
 			type: 'array', nullable: true, items: {
 				type: 'string',
 			},
@@ -85,7 +90,6 @@ export const paramDef = {
 				type: 'string',
 			},
 		},
-		summalyProxy: { type: 'string', nullable: true },
 		deeplAuthKey: { type: 'string', nullable: true },
 		deeplIsPro: { type: 'boolean' },
 		enableEmail: { type: 'boolean' },
@@ -99,10 +103,11 @@ export const paramDef = {
 		swPublicKey: { type: 'string', nullable: true },
 		swPrivateKey: { type: 'string', nullable: true },
 		tosUrl: { type: 'string', nullable: true },
-		repositoryUrl: { type: 'string' },
-		feedbackUrl: { type: 'string' },
+		repositoryUrl: { type: 'string', nullable: true },
+		feedbackUrl: { type: 'string', nullable: true },
 		impressumUrl: { type: 'string', nullable: true },
 		privacyPolicyUrl: { type: 'string', nullable: true },
+		inquiryUrl: { type: 'string', nullable: true },
 		useObjectStorage: { type: 'boolean' },
 		objectStorageBaseUrl: { type: 'string', nullable: true },
 		objectStorageBucket: { type: 'string', nullable: true },
@@ -137,10 +142,38 @@ export const paramDef = {
 		perRemoteUserUserTimelineCacheMax: { type: 'integer' },
 		perUserHomeTimelineCacheMax: { type: 'integer' },
 		perUserListTimelineCacheMax: { type: 'integer' },
+		enableReactionsBuffering: { type: 'boolean' },
 		notesPerOneAd: { type: 'integer' },
 		silencedHosts: {
 			type: 'array',
 			nullable: true,
+			items: {
+				type: 'string',
+			},
+		},
+		mediaSilencedHosts: {
+			type: 'array',
+			nullable: true,
+			items: {
+				type: 'string',
+			},
+		},
+		summalyProxy: {
+			type: 'string', nullable: true,
+			description: '[Deprecated] Use "urlPreviewSummaryProxyUrl" instead.',
+		},
+		urlPreviewEnabled: { type: 'boolean' },
+		urlPreviewTimeout: { type: 'integer' },
+		urlPreviewMaximumContentLength: { type: 'integer' },
+		urlPreviewRequireContentLength: { type: 'boolean' },
+		urlPreviewUserAgent: { type: 'string', nullable: true },
+		urlPreviewSummaryProxyUrl: { type: 'string', nullable: true },
+		federation: {
+			type: 'string',
+			enum: ['all', 'none', 'specified'],
+		},
+		federationHosts: {
+			type: 'array',
 			items: {
 				type: 'string',
 			},
@@ -177,9 +210,20 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			if (Array.isArray(ps.sensitiveWords)) {
 				set.sensitiveWords = ps.sensitiveWords.filter(Boolean);
 			}
+			if (Array.isArray(ps.prohibitedWords)) {
+				set.prohibitedWords = ps.prohibitedWords.filter(Boolean);
+			}
 			if (Array.isArray(ps.silencedHosts)) {
 				let lastValue = '';
 				set.silencedHosts = ps.silencedHosts.sort().filter((h) => {
+					const lv = lastValue;
+					lastValue = h;
+					return h !== '' && h !== lv && !set.blockedHosts?.includes(h);
+				});
+			}
+			if (Array.isArray(ps.mediaSilencedHosts)) {
+				let lastValue = '';
+				set.mediaSilencedHosts = ps.mediaSilencedHosts.sort().filter((h) => {
 					const lv = lastValue;
 					lastValue = h;
 					return h !== '' && h !== lv && !set.blockedHosts?.includes(h);
@@ -345,10 +389,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				set.langs = ps.langs.filter(Boolean);
 			}
 
-			if (ps.summalyProxy !== undefined) {
-				set.summalyProxy = ps.summalyProxy;
-			}
-
 			if (ps.enableEmail !== undefined) {
 				set.enableEmail = ps.enableEmail;
 			}
@@ -394,7 +434,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			}
 
 			if (ps.repositoryUrl !== undefined) {
-				set.repositoryUrl = ps.repositoryUrl;
+				set.repositoryUrl = URL.canParse(ps.repositoryUrl!) ? ps.repositoryUrl : null;
 			}
 
 			if (ps.feedbackUrl !== undefined) {
@@ -407,6 +447,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 			if (ps.privacyPolicyUrl !== undefined) {
 				set.privacyPolicyUrl = ps.privacyPolicyUrl;
+			}
+
+			if (ps.inquiryUrl !== undefined) {
+				set.inquiryUrl = ps.inquiryUrl;
 			}
 
 			if (ps.useObjectStorage !== undefined) {
@@ -565,12 +609,50 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				set.perUserListTimelineCacheMax = ps.perUserListTimelineCacheMax;
 			}
 
+			if (ps.enableReactionsBuffering !== undefined) {
+				set.enableReactionsBuffering = ps.enableReactionsBuffering;
+			}
+
 			if (ps.notesPerOneAd !== undefined) {
 				set.notesPerOneAd = ps.notesPerOneAd;
 			}
 
 			if (ps.bannedEmailDomains !== undefined) {
 				set.bannedEmailDomains = ps.bannedEmailDomains;
+			}
+
+			if (ps.urlPreviewEnabled !== undefined) {
+				set.urlPreviewEnabled = ps.urlPreviewEnabled;
+			}
+
+			if (ps.urlPreviewTimeout !== undefined) {
+				set.urlPreviewTimeout = ps.urlPreviewTimeout;
+			}
+
+			if (ps.urlPreviewMaximumContentLength !== undefined) {
+				set.urlPreviewMaximumContentLength = ps.urlPreviewMaximumContentLength;
+			}
+
+			if (ps.urlPreviewRequireContentLength !== undefined) {
+				set.urlPreviewRequireContentLength = ps.urlPreviewRequireContentLength;
+			}
+
+			if (ps.urlPreviewUserAgent !== undefined) {
+				const value = (ps.urlPreviewUserAgent ?? '').trim();
+				set.urlPreviewUserAgent = value === '' ? null : ps.urlPreviewUserAgent;
+			}
+
+			if (ps.summalyProxy !== undefined || ps.urlPreviewSummaryProxyUrl !== undefined) {
+				const value = ((ps.urlPreviewSummaryProxyUrl ?? ps.summalyProxy) ?? '').trim();
+				set.urlPreviewSummaryProxyUrl = value === '' ? null : value;
+			}
+
+			if (ps.federation !== undefined) {
+				set.federation = ps.federation;
+			}
+
+			if (Array.isArray(ps.federationHosts)) {
+				set.blockedHosts = ps.federationHosts.filter(Boolean).map(x => x.toLowerCase());
 			}
 
 			const before = await this.metaService.fetch(true);

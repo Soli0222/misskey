@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: syuilo and other misskey contributors
+ * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
@@ -7,6 +7,7 @@ import * as fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import * as yaml from 'js-yaml';
+import * as Sentry from '@sentry/node';
 import type { RedisOptions } from 'ioredis';
 
 type RedisOptionsSource = Partial<RedisOptions> & {
@@ -22,7 +23,7 @@ type RedisOptionsSource = Partial<RedisOptions> & {
  * 設定ファイルの型
  */
 type Source = {
-	url: string;
+	url?: string;
 	port?: number;
 	socket?: string;
 	chmodSocket?: string;
@@ -30,9 +31,9 @@ type Source = {
 	db: {
 		host: string;
 		port: number;
-		db: string;
-		user: string;
-		pass: string;
+		db?: string;
+		user?: string;
+		pass?: string;
 		disableCache?: boolean;
 		extra?: { [x: string]: string };
 	};
@@ -48,6 +49,7 @@ type Source = {
 	redisForPubsub?: RedisOptionsSource;
 	redisForJobQueue?: RedisOptionsSource;
 	redisForTimelines?: RedisOptionsSource;
+	redisForReactions?: RedisOptionsSource;
 	meilisearch?: {
 		host: string;
 		port: string;
@@ -56,6 +58,10 @@ type Source = {
 		index: string;
 		scope?: 'local' | 'global' | string[];
 	};
+	sentryForBackend?: { options: Partial<Sentry.NodeOptions>; enableNodeProfiling: boolean; };
+	sentryForFrontend?: { options: Partial<Sentry.NodeOptions> };
+
+	publishTarballInsteadOfProvideRepositoryUrl?: boolean;
 
 	proxy?: string;
 	proxySmtp?: string;
@@ -74,10 +80,10 @@ type Source = {
 
 	deliverJobConcurrency?: number;
 	inboxJobConcurrency?: number;
-	relashionshipJobConcurrency?: number;
+	relationshipJobConcurrency?: number;
 	deliverJobPerSec?: number;
 	inboxJobPerSec?: number;
-	relashionshipJobPerSec?: number;
+	relationshipJobPerSec?: number;
 	deliverJobMaxAttempts?: number;
 	inboxJobMaxAttempts?: number;
 
@@ -128,23 +134,24 @@ export type Config = {
 	proxySmtp: string | undefined;
 	proxyBypassHosts: string[] | undefined;
 	allowedPrivateNetworks: string[] | undefined;
-	maxFileSize: number | undefined;
+	maxFileSize: number;
 	clusterLimit: number | undefined;
 	id: string;
 	outgoingAddress: string | undefined;
 	outgoingAddressFamily: 'ipv4' | 'ipv6' | 'dual' | undefined;
 	deliverJobConcurrency: number | undefined;
 	inboxJobConcurrency: number | undefined;
-	relashionshipJobConcurrency: number | undefined;
+	relationshipJobConcurrency: number | undefined;
 	deliverJobPerSec: number | undefined;
 	inboxJobPerSec: number | undefined;
-	relashionshipJobPerSec: number | undefined;
+	relationshipJobPerSec: number | undefined;
 	deliverJobMaxAttempts: number | undefined;
 	inboxJobMaxAttempts: number | undefined;
 	proxyRemoteFiles: boolean | undefined;
 	signToActivityPubGet: boolean | undefined;
 
 	version: string;
+	publishTarballInsteadOfProvideRepositoryUrl: boolean;
 	host: string;
 	hostname: string;
 	scheme: string;
@@ -154,8 +161,10 @@ export type Config = {
 	authUrl: string;
 	driveUrl: string;
 	userAgent: string;
-	clientEntry: string;
-	clientManifestExists: boolean;
+	frontendEntry: string;
+	frontendManifestExists: boolean;
+	frontendEmbedEntry: string;
+	frontendEmbedManifestExists: boolean;
 	mediaProxy: string;
 	externalMediaProxyEnabled: boolean;
 	videoThumbnailGenerator: string | null;
@@ -163,6 +172,9 @@ export type Config = {
 	redisForPubsub: RedisOptions & RedisOptionsSource;
 	redisForJobQueue: RedisOptions & RedisOptionsSource;
 	redisForTimelines: RedisOptions & RedisOptionsSource;
+	redisForReactions: RedisOptions & RedisOptionsSource;
+	sentryForBackend: { options: Partial<Sentry.NodeOptions>; enableNodeProfiling: boolean; } | undefined;
+	sentryForFrontend: { options: Partial<Sentry.NodeOptions> } | undefined;
 	perChannelMaxNoteCacheCount: number;
 	perUserNotificationsMaxCount: number;
 	deactivateAntennaThreshold: number;
@@ -188,18 +200,28 @@ const path = process.env.MISSKEY_CONFIG_YML
 
 export function loadConfig(): Config {
 	const meta = JSON.parse(fs.readFileSync(`${_dirname}/../../../built/meta.json`, 'utf-8'));
-	const clientManifestExists = fs.existsSync(_dirname + '/../../../built/_vite_/manifest.json');
-	const clientManifest = clientManifestExists ?
-		JSON.parse(fs.readFileSync(`${_dirname}/../../../built/_vite_/manifest.json`, 'utf-8'))
+
+	const frontendManifestExists = fs.existsSync(_dirname + '/../../../built/_frontend_vite_/manifest.json');
+	const frontendEmbedManifestExists = fs.existsSync(_dirname + '/../../../built/_frontend_embed_vite_/manifest.json');
+	const frontendManifest = frontendManifestExists ?
+		JSON.parse(fs.readFileSync(`${_dirname}/../../../built/_frontend_vite_/manifest.json`, 'utf-8'))
 		: { 'src/_boot_.ts': { file: 'src/_boot_.ts' } };
+	const frontendEmbedManifest = frontendEmbedManifestExists ?
+		JSON.parse(fs.readFileSync(`${_dirname}/../../../built/_frontend_embed_vite_/manifest.json`, 'utf-8'))
+		: { 'src/boot.ts': { file: 'src/boot.ts' } };
+
 	const config = yaml.load(fs.readFileSync(path, 'utf-8')) as Source;
 
-	const url = tryCreateUrl(config.url);
+	const url = tryCreateUrl(config.url ?? process.env.MISSKEY_URL ?? '');
 	const version = meta.version;
 	const host = url.host;
 	const hostname = url.hostname;
 	const scheme = url.protocol.replace(/:$/, '');
 	const wsScheme = scheme.replace('http', 'ws');
+
+	const dbDb = config.db.db ?? process.env.DATABASE_DB ?? '';
+	const dbUser = config.db.user ?? process.env.DATABASE_USER ?? '';
+	const dbPass = config.db.pass ?? process.env.DATABASE_PASSWORD ?? '';
 
 	const externalMediaProxy = config.mediaProxy ?
 		config.mediaProxy.endsWith('/') ? config.mediaProxy.substring(0, config.mediaProxy.length - 1) : config.mediaProxy
@@ -209,6 +231,7 @@ export function loadConfig(): Config {
 
 	return {
 		version,
+		publishTarballInsteadOfProvideRepositoryUrl: !!config.publishTarballInsteadOfProvideRepositoryUrl,
 		url: url.origin,
 		port: config.port ?? parseInt(process.env.PORT ?? '', 10),
 		socket: config.socket,
@@ -222,7 +245,7 @@ export function loadConfig(): Config {
 		apiUrl: `${scheme}://${host}/api`,
 		authUrl: `${scheme}://${host}/auth`,
 		driveUrl: `${scheme}://${host}/files`,
-		db: config.db,
+		db: { ...config.db, db: dbDb, user: dbUser, pass: dbPass },
 		dbReplications: config.dbReplications,
 		dbSlaves: config.dbSlaves,
 		meilisearch: config.meilisearch,
@@ -230,33 +253,38 @@ export function loadConfig(): Config {
 		redisForPubsub: config.redisForPubsub ? convertRedisOptions(config.redisForPubsub, host) : redis,
 		redisForJobQueue: config.redisForJobQueue ? convertRedisOptions(config.redisForJobQueue, host) : redis,
 		redisForTimelines: config.redisForTimelines ? convertRedisOptions(config.redisForTimelines, host) : redis,
+		redisForReactions: config.redisForReactions ? convertRedisOptions(config.redisForReactions, host) : redis,
+		sentryForBackend: config.sentryForBackend,
+		sentryForFrontend: config.sentryForFrontend,
 		id: config.id,
 		proxy: config.proxy,
 		proxySmtp: config.proxySmtp,
 		proxyBypassHosts: config.proxyBypassHosts,
 		allowedPrivateNetworks: config.allowedPrivateNetworks,
-		maxFileSize: config.maxFileSize,
+		maxFileSize: config.maxFileSize ?? 262144000,
 		clusterLimit: config.clusterLimit,
 		outgoingAddress: config.outgoingAddress,
 		outgoingAddressFamily: config.outgoingAddressFamily,
 		deliverJobConcurrency: config.deliverJobConcurrency,
 		inboxJobConcurrency: config.inboxJobConcurrency,
-		relashionshipJobConcurrency: config.relashionshipJobConcurrency,
+		relationshipJobConcurrency: config.relationshipJobConcurrency,
 		deliverJobPerSec: config.deliverJobPerSec,
 		inboxJobPerSec: config.inboxJobPerSec,
-		relashionshipJobPerSec: config.relashionshipJobPerSec,
+		relationshipJobPerSec: config.relationshipJobPerSec,
 		deliverJobMaxAttempts: config.deliverJobMaxAttempts,
 		inboxJobMaxAttempts: config.inboxJobMaxAttempts,
 		proxyRemoteFiles: config.proxyRemoteFiles,
-		signToActivityPubGet: config.signToActivityPubGet,
+		signToActivityPubGet: config.signToActivityPubGet ?? true,
 		mediaProxy: externalMediaProxy ?? internalMediaProxy,
 		externalMediaProxyEnabled: externalMediaProxy !== null && externalMediaProxy !== internalMediaProxy,
 		videoThumbnailGenerator: config.videoThumbnailGenerator ?
 			config.videoThumbnailGenerator.endsWith('/') ? config.videoThumbnailGenerator.substring(0, config.videoThumbnailGenerator.length - 1) : config.videoThumbnailGenerator
 			: null,
 		userAgent: `Misskey/${version} (${config.url})`,
-		clientEntry: clientManifest['src/_boot_.ts'],
-		clientManifestExists: clientManifestExists,
+		frontendEntry: frontendManifest['src/_boot_.ts'],
+		frontendManifestExists: frontendManifestExists,
+		frontendEmbedEntry: frontendEmbedManifest['src/boot.ts'],
+		frontendEmbedManifestExists: frontendEmbedManifestExists,
 		perChannelMaxNoteCacheCount: config.perChannelMaxNoteCacheCount ?? 1000,
 		perUserNotificationsMaxCount: config.perUserNotificationsMaxCount ?? 500,
 		deactivateAntennaThreshold: config.deactivateAntennaThreshold ?? (1000 * 60 * 60 * 24 * 7),

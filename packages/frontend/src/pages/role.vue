@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -43,7 +43,7 @@ import MkUserList from '@/components/MkUserList.vue';
 import { definePageMetadata } from '@/scripts/page-metadata.js';
 import { i18n } from '@/i18n.js';
 import MkTimeline from '@/components/MkTimeline.vue';
-import { instanceName } from '@/config.js';
+import { instanceName } from '@@/js/config.js';
 import { serverErrorImageUrl, infoImageUrl } from '@/instance.js';
 
 const props = withDefaults(defineProps<{
@@ -93,10 +93,10 @@ const headerTabs = computed(() => [{
 	title: i18n.ts.timeline,
 }]);
 
-definePageMetadata(computed(() => ({
-	title: role.value?.name,
+definePageMetadata(() => ({
+	title: role.value ? role.value.name : i18n.ts.role,
 	icon: 'ti ti-badge',
-})));
+}));
 </script>
 
 <style lang="scss" module>

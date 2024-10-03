@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: syuilo and other misskey contributors
+ * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
@@ -24,9 +24,19 @@ export const meta = {
 			type: 'object',
 			optional: false, nullable: false,
 			properties: {
-				id: { type: 'string', format: 'misskey:id' },
-				score: { type: 'integer' },
-				user: { ref: 'UserLite' },
+				id: {
+					type: 'string', format: 'misskey:id',
+					optional: false, nullable: false,
+				},
+				score: {
+					type: 'integer',
+					optional: false, nullable: false,
+				},
+				user: {
+					type: 'object',
+					optional: true, nullable: false,
+					ref: 'UserLite',
+				},
 			},
 		},
 	},
@@ -36,6 +46,7 @@ export const paramDef = {
 	type: 'object',
 	properties: {
 		gameMode: { type: 'string' },
+		alldata: { type: 'boolean', default: false },
 	},
 	required: ['gameMode'],
 } as const;
@@ -52,7 +63,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			const records = await this.bubbleGameRecordsRepository.find({
 				where: {
 					gameMode: ps.gameMode,
-					seededAt: MoreThan(new Date(Date.now() - 1000 * 60 * 60 * 24 * 7)),
+					...(ps.alldata ? {} : { seededAt: MoreThan(new Date(Date.now() - 1000 * 60 * 60 * 24 * 7)) }),
 				},
 				order: {
 					score: 'DESC',
@@ -61,7 +72,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				relations: ['user'],
 			});
 
-			const users = await this.userEntityService.packMany(records.map(r => r.user!), null, { detail: false });
+			const users = await this.userEntityService.packMany(records.map(r => r.user!), null);
 
 			return records.map(r => ({
 				id: r.id,

@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -88,15 +88,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<template #caption>{{ i18n.ts._profile.metadataDescription }}</template>
 	</FormSlot>
 
-	<MkFolder>
-		<template #label>{{ i18n.ts.advancedSettings }}</template>
-
-		<div class="_gaps_m">
-			<MkSwitch v-model="profile.isCat">{{ i18n.ts.flagAsCat }}<template #caption>{{ i18n.ts.flagAsCatDescription }}</template></MkSwitch>
-			<MkSwitch v-model="profile.isSheep">{{ i18n.ts.flagAsSheep }}<template #caption>{{ i18n.ts.flagAsSheepDescription }}</template></MkSwitch>
-			<MkSwitch v-model="profile.isBot">{{ i18n.ts.flagAsBot }}<template #caption>{{ i18n.ts.flagAsBotDescription }}</template></MkSwitch>
-		</div>
-	</MkFolder>
+	<MkInput v-model="profile.followedMessage" :max="200" manualSave :mfmPreview="false">
+		<template #label>{{ i18n.ts._profile.followedMessage }}<span class="_beta">{{ i18n.ts.beta }}</span></template>
+		<template #caption>
+			<div>{{ i18n.ts._profile.followedMessageDescription }}</div>
+			<div>{{ i18n.ts._profile.followedMessageDescriptionForLockedAccount }}</div>
+		</template>
+	</MkInput>
 
 	<MkSelect v-model="reactionAcceptance">
 		<template #label>{{ i18n.ts.reactionAcceptance }}</template>
@@ -106,6 +104,17 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<option value="nonSensitiveOnlyForLocalLikeOnlyForRemote">{{ i18n.ts.nonSensitiveOnlyForLocalLikeOnlyForRemote }}</option>
 		<option value="likeOnly">{{ i18n.ts.likeOnly }}</option>
 	</MkSelect>
+
+	<MkFolder>
+		<template #label>{{ i18n.ts.advancedSettings }}</template>
+
+		<div class="_gaps_m">
+			<MkSwitch v-model="profile.isCat">{{ i18n.ts.flagAsCat }}<template #caption>{{ i18n.ts.flagAsCatDescription }}</template></MkSwitch>
+			<MkSwitch v-model="profile.isSheep">{{ i18n.ts.flagAsSheep }}<template #caption>{{ i18n.ts.flagAsSheepDescription }}</template></MkSwitch>
+			<MkSwitch v-model="profile.isDsite">{{ i18n.ts.flagAsDsite }}<template #caption>{{ i18n.ts.flagAsDsiteDescription }}</template></MkSwitch>
+			<MkSwitch v-model="profile.isBot">{{ i18n.ts.flagAsBot }}<template #caption>{{ i18n.ts.flagAsBotDescription }}</template></MkSwitch>
+		</div>
+	</MkFolder>
 </div>
 </template>
 
@@ -126,6 +135,7 @@ import { langmap } from '@/scripts/langmap.js';
 import { definePageMetadata } from '@/scripts/page-metadata.js';
 import { claimAchievement } from '@/scripts/achievements.js';
 import { defaultStore } from '@/store.js';
+import { globalEvents } from '@/events.js';
 import MkInfo from '@/components/MkInfo.vue';
 import MkTextarea from '@/components/MkTextarea.vue';
 
@@ -138,12 +148,14 @@ const reactionAcceptance = computed(defaultStore.makeGetterSetter('reactionAccep
 const profile = reactive({
 	name: $i.name,
 	description: $i.description,
+	followedMessage: $i.followedMessage,
 	location: $i.location,
 	birthday: $i.birthday,
 	lang: $i.lang,
 	isBot: $i.isBot ?? false,
 	isCat: $i.isCat ?? false,
 	isSheep: $i.isSheep ?? false,
+	isDsite: $i.isDsite ?? false,
 });
 
 watch(() => profile, () => {
@@ -175,6 +187,7 @@ function saveFields() {
 	os.apiWithDialog('i/update', {
 		fields: fields.value.filter(field => field.name !== '' && field.value !== '').map(field => ({ name: field.name, value: field.value })),
 	});
+	globalEvents.emit('requestClearPageCache');
 }
 
 function save() {
@@ -185,6 +198,8 @@ function save() {
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		description: profile.description || null,
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+		followedMessage: profile.followedMessage || null,
+		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		location: profile.location || null,
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		birthday: profile.birthday || null,
@@ -193,7 +208,9 @@ function save() {
 		isBot: !!profile.isBot,
 		isCat: !!profile.isCat,
 		isSheep: !!profile.isSheep,
+		isDsite: !!profile.isDsite,
 	});
+	globalEvents.emit('requestClearPageCache');
 	claimAchievement('profileFilled');
 	if (profile.name === 'syuilo' || profile.name === 'しゅいろ') {
 		claimAchievement('setNameToSyuilo');
@@ -209,7 +226,7 @@ function changeAvatar(ev) {
 
 		const { canceled } = await os.confirm({
 			type: 'question',
-			text: i18n.t('cropImageAsk'),
+			text: i18n.ts.cropImageAsk,
 			okText: i18n.ts.cropYes,
 			cancelText: i18n.ts.cropNo,
 		});
@@ -225,6 +242,7 @@ function changeAvatar(ev) {
 		});
 		$i.avatarId = i.avatarId;
 		$i.avatarUrl = i.avatarUrl;
+		globalEvents.emit('requestClearPageCache');
 		claimAchievement('profileFilled');
 	});
 }
@@ -235,7 +253,7 @@ function changeBanner(ev) {
 
 		const { canceled } = await os.confirm({
 			type: 'question',
-			text: i18n.t('cropImageAsk'),
+			text: i18n.ts.cropImageAsk,
 			okText: i18n.ts.cropYes,
 			cancelText: i18n.ts.cropNo,
 		});
@@ -251,6 +269,7 @@ function changeBanner(ev) {
 		});
 		$i.bannerId = i.bannerId;
 		$i.bannerUrl = i.bannerUrl;
+		globalEvents.emit('requestClearPageCache');
 	});
 }
 
@@ -258,10 +277,10 @@ const headerActions = computed(() => []);
 
 const headerTabs = computed(() => []);
 
-definePageMetadata({
+definePageMetadata(() => ({
 	title: i18n.ts.profile,
 	icon: 'ti ti-user',
-});
+}));
 </script>
 
 <style lang="scss" module>
@@ -340,6 +359,7 @@ definePageMetadata({
 	&:hover, &:focus {
 		opacity: .7;
 	}
+
 	&:active {
 		cursor: pointer;
 	}

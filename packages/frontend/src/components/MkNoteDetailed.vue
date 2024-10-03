@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -7,9 +7,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 <div
 	v-if="!muted"
 	v-show="!isDeleted"
-	ref="el"
+	ref="rootEl"
 	v-hotkey="keymap"
 	:class="$style.root"
+	:tabindex="isDeleted ? '-1' : '0'"
 >
 	<div v-if="appearNote.reply && appearNote.reply.replyId">
 		<div v-if="!conversationLoaded" style="padding: 16px">
@@ -31,7 +32,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</I18n>
 		</span>
 		<div :class="$style.renoteInfo">
-			<button ref="renoteTime" class="_button" :class="$style.renoteTime" @click="showRenoteMenu()">
+			<button ref="renoteTime" class="_button" :class="$style.renoteTime" @mousedown.prevent="showRenoteMenu()">
 				<i v-if="isMyRenote" class="ti ti-dots" style="margin-right: 4px;"></i>
 				<MkTime :time="note.createdAt"/>
 			</button>
@@ -67,8 +68,17 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</header>
 		<div :class="$style.noteContent">
 			<p v-if="appearNote.cw != null" :class="$style.cw">
-				<Mfm v-if="appearNote.cw != ''" style="margin-right: 8px;" :text="appearNote.cw" :author="appearNote.user" :nyaize="'respect'" :myaize="'respect'"/>
-				<MkCwButton v-model="showContent" :text="appearNote.text" :files="appearNote.files" :poll="appearNote.poll"/>
+				<Mfm
+					v-if="appearNote.cw != ''"
+					:text="appearNote.cw"
+					:author="appearNote.user"
+					:nyaize="'respect'"
+					:myaize="'respect'"
+					:dlsize="'respect'"
+					:enableEmojiMenu="true"
+					:enableEmojiMenuReaction="true"
+				/>
+				<MkCwButton v-model="showContent" :text="appearNote.text" :renote="appearNote.renote" :files="appearNote.files" :poll="appearNote.poll"/>
 			</p>
 			<div v-show="appearNote.cw == null || showContent">
 				<span v-if="appearNote.isHidden" style="opacity: 0.5">({{ i18n.ts.private }})</span>
@@ -80,6 +90,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					:author="appearNote.user"
 					:nyaize="'respect'"
 					:myaize="'respect'"
+					:dlsize="'respect'"
 					:emojiUrls="appearNote.emojis"
 					:enableEmojiMenu="true"
 					:enableEmojiMenuReaction="true"
@@ -87,19 +98,23 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<a v-if="appearNote.renote != null" :class="$style.rn">RN:</a>
 				<div v-if="translating || translation" :class="$style.translation">
 					<MkLoading v-if="translating" mini/>
-					<div v-else>
-						<b>{{ i18n.t('translatedFrom', { x: translation.sourceLang }) }}: </b>
-						<Mfm :text="translation.text" :author="appearNote.user" :nyaize="'respect'" :myaize="'respect'" :emojiUrls="appearNote.emojis"/>
+					<div v-else-if="translation">
+						<b>{{ i18n.tsx.translatedFrom({ x: translation.sourceLang }) }}: </b>
+						<Mfm :text="translation.text" :author="appearNote.user" :nyaize="'respect'" :myaize="'respect'" :dlsize="'respect'" :emojiUrls="appearNote.emojis"/>
 					</div>
 				</div>
 				<div v-if="denyaize" :class="$style.translation">
-					<Mfm :text="appearNote.text" :author="appearNote.user" :emojiUrls="appearNote.emojis"/>
+					<div v-if="appearNote.text != null">
+						<Mfm :text="appearNote.text" :author="appearNote.user" :emojiUrls="appearNote.emojis"/>
+					</div>
 				</div>
-				<div v-if="appearNote.files.length > 0">
-					<MkMediaList :mediaList="appearNote.files"/>
+				<div v-if="appearNote.files && appearNote.files.length > 0">
+					<MkMediaList ref="galleryEl" :mediaList="appearNote.files"/>
 				</div>
-				<MkPoll v-if="appearNote.poll" ref="pollViewer" :note="appearNote" :class="$style.poll"/>
-				<MkUrlPreview v-for="url in urls" :key="url" :url="url" :compact="true" :detail="true" style="margin-top: 6px;"/>
+				<MkPoll v-if="appearNote.poll" ref="pollViewer" :noteId="appearNote.id" :poll="appearNote.poll" :class="$style.poll"/>
+				<div v-if="isEnabledUrlPreview">
+					<MkUrlPreview v-for="url in urls" :key="url" :url="url" :compact="true" :detail="true" style="margin-top: 6px;"/>
+				</div>
 				<div v-if="appearNote.renote" :class="$style.quote"><MkNoteSimple :note="appearNote.renote" :class="$style.quoteNote"/></div>
 			</div>
 			<MkA v-if="appearNote.channel && !inChannel" :class="$style.channel" :to="`/channels/${appearNote.channel.id}`"><i class="ti ti-device-tv"></i> {{ appearNote.channel.name }}</MkA>
@@ -110,41 +125,35 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkTime :time="appearNote.createdAt" mode="detail" colored/>
 				</MkA>
 			</div>
-			<MkReactionsViewer ref="reactionsViewer" :note="appearNote"/>
+			<MkReactionsViewer v-if="appearNote.reactionAcceptance !== 'likeOnly'" ref="reactionsViewer" :note="appearNote"/>
 			<button class="_button" :class="$style.noteFooterButton" @click="reply()">
 				<i class="ti ti-arrow-back-up"></i>
-				<p v-if="appearNote.repliesCount > 0" :class="$style.noteFooterButtonCount">{{ appearNote.repliesCount }}</p>
+				<p v-if="appearNote.repliesCount > 0" :class="$style.noteFooterButtonCount">{{ number(appearNote.repliesCount) }}</p>
 			</button>
 			<button
 				v-if="canRenote"
 				ref="renoteButton"
 				class="_button"
 				:class="$style.noteFooterButton"
-				@mousedown="renote()"
+				@mousedown.prevent="renote()"
 			>
 				<i class="ti ti-repeat"></i>
-				<p v-if="appearNote.renoteCount > 0" :class="$style.noteFooterButtonCount">{{ appearNote.renoteCount }}</p>
+				<p v-if="appearNote.renoteCount > 0" :class="$style.noteFooterButtonCount">{{ number(appearNote.renoteCount) }}</p>
 			</button>
 			<button v-else class="_button" :class="$style.noteFooterButton" disabled>
 				<i class="ti ti-ban"></i>
 			</button>
-			<button v-if="appearNote.myReaction == null" ref="reactButton" :class="$style.noteFooterButton" class="_button" @mousedown="react()">
-				<i v-if="appearNote.reactionAcceptance === 'likeOnly'" class="ti ti-heart"></i>
+			<button ref="reactButton" :class="$style.noteFooterButton" class="_button" @click="toggleReact()">
+				<i v-if="appearNote.reactionAcceptance === 'likeOnly' && appearNote.myReaction != null" class="ti ti-heart-filled" style="color: var(--love);"></i>
+				<i v-else-if="appearNote.myReaction != null" class="ti ti-minus" style="color: var(--accent);"></i>
+				<i v-else-if="appearNote.reactionAcceptance === 'likeOnly'" class="ti ti-heart"></i>
 				<i v-else class="ti ti-plus"></i>
+				<p v-if="(appearNote.reactionAcceptance === 'likeOnly' || defaultStore.state.showReactionsCount) && appearNote.reactionCount > 0" :class="$style.noteFooterButtonCount">{{ number(appearNote.reactionCount) }}</p>
 			</button>
-			<button v-if="appearNote.myReaction != null" ref="reactButton" class="_button" :class="[$style.noteFooterButton, $style.reacted]" @click="undoReact(appearNote)">
-				<i class="ti ti-minus"></i>
-			</button>
-			<button v-if="favorited" ref="favButton" :class="$style.noteFooterButton" class="_button" @click="toggleFavorite(false)">
-				<i class="ti ti-star-off"></i>
-			</button>
-			<button v-else ref="favButton" :class="$style.noteFooterButton" class="_button" @click="toggleFavorite(true)">
-				<i class="ti ti-star"></i>
-			</button>
-			<button v-if="defaultStore.state.showClipButtonInNoteFooter" ref="clipButton" class="_button" :class="$style.noteFooterButton" @mousedown="clip()">
+			<button v-if="defaultStore.state.showClipButtonInNoteFooter" ref="clipButton" class="_button" :class="$style.noteFooterButton" @mousedown.prevent="clip()">
 				<i class="ti ti-paperclip"></i>
 			</button>
-			<button ref="menuButton" class="_button" :class="$style.noteFooterButton" @mousedown="menu()">
+			<button ref="menuButton" class="_button" :class="$style.noteFooterButton" @mousedown.prevent="showMenu()">
 				<i class="ti ti-dots"></i>
 			</button>
 		</footer>
@@ -206,27 +215,31 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { computed, inject, onMounted, provide, ref, shallowRef } from 'vue';
 import * as mfm from 'mfm-js';
 import * as Misskey from 'misskey-js';
+import { isLink } from '@@/js/is-link.js';
 import MkNoteSub from '@/components/MkNoteSub.vue';
 import MkNoteSimple from '@/components/MkNoteSimple.vue';
 import MkReactionsViewer from '@/components/MkReactionsViewer.vue';
+import MkReactionsViewerDetails from '@/components/MkReactionsViewer.details.vue';
 import MkMediaList from '@/components/MkMediaList.vue';
 import MkCwButton from '@/components/MkCwButton.vue';
 import MkPoll from '@/components/MkPoll.vue';
 import MkUsersTooltip from '@/components/MkUsersTooltip.vue';
 import MkUrlPreview from '@/components/MkUrlPreview.vue';
 import MkInstanceTicker from '@/components/MkInstanceTicker.vue';
-import { pleaseLogin } from '@/scripts/please-login.js';
+import { pleaseLogin, type OpenOnRemoteOptions } from '@/scripts/please-login.js';
 import { checkWordMute } from '@/scripts/check-word-mute.js';
 import { userPage } from '@/filters/user.js';
 import { notePage } from '@/filters/note.js';
+import number from '@/filters/number.js';
 import * as os from '@/os.js';
-import { misskeyApi } from '@/scripts/misskey-api.js';
+import { misskeyApi, misskeyApiGet } from '@/scripts/misskey-api.js';
 import * as sound from '@/scripts/sound.js';
 import { defaultStore, noteViewInterruptors } from '@/store.js';
 import { reactionPicker } from '@/scripts/reaction-picker.js';
 import { extractUrlFromMfm } from '@/scripts/extract-url-from-mfm.js';
 import { $i } from '@/account.js';
 import { i18n } from '@/i18n.js';
+import { host } from '@@/js/config.js';
 import { getNoteClipMenu, getNoteMenu, getRenoteMenu } from '@/scripts/get-note-menu.js';
 import { useNoteCapture } from '@/scripts/use-note-capture.js';
 import { deepClone } from '@/scripts/clone.js';
@@ -235,13 +248,19 @@ import { claimAchievement } from '@/scripts/achievements.js';
 import MkRippleEffect from '@/components/MkRippleEffect.vue';
 import { showMovedDialog } from '@/scripts/show-moved-dialog.js';
 import MkUserCardMini from '@/components/MkUserCardMini.vue';
-import MkPagination from '@/components/MkPagination.vue';
+import MkPagination, { type Paging } from '@/components/MkPagination.vue';
 import MkReactionIcon from '@/components/MkReactionIcon.vue';
 import MkButton from '@/components/MkButton.vue';
+import { isEnabledUrlPreview } from '@/instance.js';
+import { getAppearNote } from '@/scripts/get-appear-note.js';
+import { type Keymap } from '@/scripts/hotkey.js';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	note: Misskey.entities.Note;
-}>();
+	initialTab: string;
+}>(), {
+	initialTab: 'replies',
+});
 
 const inChannel = inject('inChannel', null);
 
@@ -253,7 +272,7 @@ if (noteViewInterruptors.length > 0) {
 		let result: Misskey.entities.Note | null = deepClone(note.value);
 		for (const interruptor of noteViewInterruptors) {
 			try {
-				result = await interruptor.handler(result);
+				result = await interruptor.handler(result!) as Misskey.entities.Note | null;
 				if (result === null) {
 					isDeleted.value = true;
 					return;
@@ -262,25 +281,21 @@ if (noteViewInterruptors.length > 0) {
 				console.error(err);
 			}
 		}
-		note.value = result;
+		note.value = result as Misskey.entities.Note;
 	});
 }
 
-const isRenote = (
-	note.value.renote != null &&
-	note.value.text == null &&
-	note.value.fileIds.length === 0 &&
-	note.value.poll == null
-);
+const isRenote = Misskey.note.isPureRenote(note.value);
 
-const el = shallowRef<HTMLElement>();
+const rootEl = shallowRef<HTMLElement>();
 const menuButton = shallowRef<HTMLElement>();
 const renoteButton = shallowRef<HTMLElement>();
 const renoteTime = shallowRef<HTMLElement>();
 const reactButton = shallowRef<HTMLElement>();
 const clipButton = shallowRef<HTMLElement>();
 const favButton = shallowRef<HTMLElement>();
-const appearNote = computed(() => isRenote ? note.value.renote as Misskey.entities.Note : note.value);
+const appearNote = computed(() => getAppearNote(note.value));
+const galleryEl = shallowRef<InstanceType<typeof MkMediaList>>();
 const isMyRenote = $i && ($i.id === note.value.userId);
 const showContent = ref(false);
 const isDeleted = ref(false);
@@ -288,11 +303,16 @@ const muted = ref($i ? checkWordMute(appearNote.value, $i, $i.mutedWords) : fals
 const translation = ref<Misskey.entities.NotesTranslateResponse | null>(null);
 const translating = ref(false);
 const parsed = appearNote.value.text ? mfm.parse(appearNote.value.text) : null;
-const urls = parsed ? extractUrlFromMfm(parsed) : null;
+const urls = parsed ? extractUrlFromMfm(parsed).filter((url) => appearNote.value.renote?.url !== url && appearNote.value.renote?.uri !== url) : null;
 const showTicker = (defaultStore.state.instanceTicker === 'always') || (defaultStore.state.instanceTicker === 'remote' && appearNote.value.user.instance);
 const conversation = ref<Misskey.entities.Note[]>([]);
 const replies = ref<Misskey.entities.Note[]>([]);
-const canRenote = computed(() => ['public', 'home'].includes(appearNote.value.visibility) || appearNote.value.userId === $i.id);
+const canRenote = computed(() => ['public', 'home'].includes(appearNote.value.visibility) || appearNote.value.userId === $i?.id);
+
+const pleaseLoginContext = computed<OpenOnRemoteOptions>(() => ({
+	type: 'lookup',
+	url: `https://${host}/notes/${appearNote.value.id}`,
+}));
 const favorited = ref(false);
 const denyaize = ref(false);
 
@@ -308,13 +328,25 @@ checkFav(appearNote.value).then((result) => {
 });
 
 const keymap = {
-	'r': () => reply(true),
-	'e|a|plus': () => react(true),
-	'q': () => renoteButton.value.renote(true),
-	'esc': blur,
-	'm|o': () => menu(true),
-	's': () => showContent.value !== showContent.value,
-};
+	'r': () => reply(),
+	'e|a|plus': () => react(),
+	'q': () => renote(),
+	'm': () => showMenu(),
+	'c': () => {
+		if (!defaultStore.state.showClipButtonInNoteFooter) return;
+		clip();
+	},
+	'o': () => galleryEl.value?.openGallery(),
+	'v|enter': () => {
+		if (appearNote.value.cw != null) {
+			showContent.value = !showContent.value;
+		}
+	},
+	'esc': {
+		allowRepeat: true,
+		callback: () => blur(),
+	},
+} as const satisfies Keymap;
 
 provide('react', (reaction: string) => {
 	misskeyApi('notes/reactions/create', {
@@ -323,10 +355,10 @@ provide('react', (reaction: string) => {
 	});
 });
 
-const tab = ref('replies');
+const tab = ref(props.initialTab);
 const reactionTabType = ref<string | null>(null);
 
-const renotesPagination = computed(() => ({
+const renotesPagination = computed<Paging>(() => ({
 	endpoint: 'notes/renotes',
 	limit: 10,
 	params: {
@@ -334,7 +366,7 @@ const renotesPagination = computed(() => ({
 	},
 }));
 
-const reactionsPagination = computed(() => ({
+const reactionsPagination = computed<Paging>(() => ({
 	endpoint: 'notes/reactions',
 	limit: 10,
 	params: {
@@ -344,7 +376,7 @@ const reactionsPagination = computed(() => ({
 }));
 
 useNoteCapture({
-	rootEl: el,
+	rootEl: rootEl,
 	note: appearNote,
 	pureNote: note,
 	isDeletedRef: isDeleted,
@@ -360,38 +392,61 @@ useTooltip(renoteButton, async (showing) => {
 
 	if (users.length < 1) return;
 
-	os.popup(MkUsersTooltip, {
+	const { dispose } = os.popup(MkUsersTooltip, {
 		showing,
 		users,
 		count: appearNote.value.renoteCount,
 		targetElement: renoteButton.value,
-	}, {}, 'closed');
+	}, {
+		closed: () => dispose(),
+	});
 });
 
-function renote(viaKeyboard = false) {
-	pleaseLogin();
-	showMovedDialog();
+if (appearNote.value.reactionAcceptance === 'likeOnly') {
+	useTooltip(reactButton, async (showing) => {
+		const reactions = await misskeyApiGet('notes/reactions', {
+			noteId: appearNote.value.id,
+			limit: 10,
+			_cacheKey_: appearNote.value.reactionCount,
+		});
 
-	const { menu } = getRenoteMenu({ note: note.value, renoteButton });
-	os.popupMenu(menu, renoteButton.value, {
-		viaKeyboard,
+		const users = reactions.map(x => x.user);
+
+		if (users.length < 1) return;
+
+		const { dispose } = os.popup(MkReactionsViewerDetails, {
+			showing,
+			reaction: '❤️',
+			users,
+			count: appearNote.value.reactionCount,
+			targetElement: reactButton.value!,
+		}, {
+			closed: () => dispose(),
+		});
 	});
 }
 
-function reply(viaKeyboard = false): void {
-	pleaseLogin();
+function renote() {
+	pleaseLogin(undefined, pleaseLoginContext.value);
+	showMovedDialog();
+
+	const { menu } = getRenoteMenu({ note: note.value, renoteButton });
+	os.popupMenu(menu, renoteButton.value);
+}
+
+function reply(): void {
+	pleaseLogin(undefined, pleaseLoginContext.value);
 	showMovedDialog();
 	os.post({
 		reply: appearNote.value,
 		channel: appearNote.value.channel,
-		animation: !viaKeyboard,
-	}, () => {
+	}).then(() => {
 		focus();
 	});
 }
 
-function react(viaKeyboard = false): void {
-	pleaseLogin();
+function react(): void {
+	pleaseLogin(undefined, pleaseLoginContext.value);
 	showMovedDialog();
 	if (appearNote.value.reactionAcceptance === 'likeOnly') {
 		sound.playMisskeySfx('reaction');
@@ -400,16 +455,18 @@ function react(viaKeyboard = false): void {
 			noteId: appearNote.value.id,
 			reaction: '❤️',
 		});
-		const el = reactButton.value as HTMLElement | null | undefined;
+		const el = reactButton.value;
 		if (el) {
 			const rect = el.getBoundingClientRect();
 			const x = rect.left + (el.offsetWidth / 2);
 			const y = rect.top + (el.offsetHeight / 2);
-			os.popup(MkRippleEffect, { x, y }, {}, 'end');
+			const { dispose } = os.popup(MkRippleEffect, { x, y }, {
+				end: () => dispose(),
+			});
 		}
 	} else {
 		blur();
-		reactionPicker.show(reactButton.value, reaction => {
+		reactionPicker.show(reactButton.value ?? null, note.value, reaction => {
 			sound.playMisskeySfx('reaction');
 
 			misskeyApi('notes/reactions/create', {
@@ -425,41 +482,41 @@ function react(viaKeyboard = false): void {
 	}
 }
 
-function undoReact(note): void {
-	const oldReaction = note.myReaction;
+function undoReact(targetNote: Misskey.entities.Note): void {
+	const oldReaction = targetNote.myReaction;
 	if (!oldReaction) return;
 	misskeyApi('notes/reactions/delete', {
-		noteId: note.id,
+		noteId: targetNote.id,
 	});
 }
 
+function toggleReact() {
+	if (appearNote.value.myReaction == null) {
+		react();
+	} else {
+		undoReact(appearNote.value);
+	}
+}
+
 function onContextmenu(ev: MouseEvent): void {
-	const isLink = (el: HTMLElement) => {
-		if (el.tagName === 'A') return true;
-		if (el.parentElement) {
-			return isLink(el.parentElement);
-		}
-	};
-	if (isLink(ev.target)) return;
-	if (window.getSelection().toString() !== '') return;
+	if (ev.target && isLink(ev.target as HTMLElement)) return;
+	if (window.getSelection()?.toString() !== '') return;
 
 	if (defaultStore.state.useReactionPickerForContextMenu) {
 		ev.preventDefault();
 		react();
 	} else {
-		const { menu, cleanup } = getNoteMenu({ note: note.value, translating, translation, denyaize, menuButton, isDeleted });
+		const { menu, cleanup } = getNoteMenu({ note: note.value, translating, translation, denyaize, isDeleted });
 		os.contextMenu(menu, ev).then(focus).finally(cleanup);
 	}
 }
 
-function menu(viaKeyboard = false): void {
-	const { menu, cleanup } = getNoteMenu({ note: note.value, translating, translation, denyaize, menuButton, isDeleted });
-	os.popupMenu(menu, menuButton.value, {
-		viaKeyboard,
-	}).then(focus).finally(cleanup);
+function showMenu(): void {
+	const { menu, cleanup } = getNoteMenu({ note: note.value, translating, translation, denyaize, isDeleted });
+	os.popupMenu(menu, menuButton.value).then(focus).finally(cleanup);
 }
 
-async function clip() {
+async function clip(): Promise<void> {
 	os.popupMenu(await getNoteClipMenu({ note: note.value, isDeleted }), clipButton.value).then(focus);
 }
 
@@ -470,7 +527,9 @@ async function toggleFavorite(favorite: boolean) {
 			const rect = el.getBoundingClientRect();
 			const x = rect.left + (el.offsetWidth / 2);
 			const y = rect.top + (el.offsetHeight / 2);
-			os.popup(MkRippleEffect, { x, y }, {}, 'end');
+			const { dispose } = os.popup(MkRippleEffect, { x, y }, {
+				end: () => dispose(),
+			});
 		}
 	}
 	focus();
@@ -484,9 +543,9 @@ async function toggleFavorite(favorite: boolean) {
 	favorited.value = result;
 }
 
-function showRenoteMenu(viaKeyboard = false): void {
+function showRenoteMenu(): void {
 	if (!isMyRenote) return;
-	pleaseLogin();
+	pleaseLogin(undefined, pleaseLoginContext.value);
 	os.popupMenu([{
 		text: i18n.ts.unrenote,
 		icon: 'ti ti-trash',
@@ -497,17 +556,15 @@ function showRenoteMenu(viaKeyboard = false): void {
 			});
 			isDeleted.value = true;
 		},
-	}], renoteTime.value, {
-		viaKeyboard: viaKeyboard,
-	});
+	}], renoteTime.value);
 }
 
 function focus() {
-	el.value.focus();
+	rootEl.value?.focus();
 }
 
 function blur() {
-	el.value.blur();
+	rootEl.value?.blur();
 }
 
 const repliesLoaded = ref(false);
@@ -526,6 +583,7 @@ const conversationLoaded = ref(false);
 
 function loadConversation() {
 	conversationLoaded.value = true;
+	if (appearNote.value.replyId == null) return;
 	misskeyApi('notes/conversation', {
 		noteId: appearNote.value.replyId,
 	}).then(res => {
@@ -540,6 +598,28 @@ function loadConversation() {
 	transition: box-shadow 0.1s ease;
 	overflow: clip;
 	contain: content;
+
+	&:focus-visible {
+		outline: none;
+
+		&::after {
+			content: "";
+			pointer-events: none;
+			display: block;
+			position: absolute;
+			z-index: 10;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			margin: auto;
+			width: calc(100% - 8px);
+			height: calc(100% - 8px);
+			border: dashed 2px var(--focus);
+			border-radius: var(--radius);
+			box-sizing: border-box;
+		}
+	}
 }
 
 .replyTo {

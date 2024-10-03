@@ -366,6 +366,8 @@ hcaptcha: "hCaptcha"
 enableHcaptcha: "hCaptchani yoqish"
 hcaptchaSiteKey: "Sayt kaliti"
 hcaptchaSecretKey: "Mahfiy kalit"
+mcaptchaSiteKey: "Sayt kaliti"
+mcaptchaSecretKey: "Maxfiy kalit"
 recaptcha: "reCAPTCHA"
 enableRecaptcha: "reCAPTCHA ni yoqish"
 recaptchaSiteKey: "Sayt kaliti"
@@ -469,7 +471,6 @@ uiLanguage: "Interfeys tili"
 aboutX: "{x} haqida"
 emojiStyle: "Emoji ko'rinishi"
 native: "Mahalliy"
-disableDrawer: "Slayd menyusidan foydalanmang"
 showNoteActionsOnlyHover: "Eslatma amallarini faqat sichqonchani olib borganda ko‘rsatish"
 noHistory: "Tarix yo'q"
 signinHistory: "kirish tarixi"
@@ -844,6 +845,10 @@ icon: "Avatar"
 replies: "Javob berish"
 renotes: "Qayta qayd etish"
 flip: "Teskari"
+_delivery:
+  stop: "To'xtatilgan"
+  _type:
+    none: "Yuborilmoqda"
 _achievements:
   _types:
     _viewInstanceChart:
@@ -973,6 +978,7 @@ _profile:
   changeBanner: "Bannerni o'zgartirish"
 _exportOrImport:
   allNotes: "Barcha qaydlar"
+  clips: "Klip"
   followingList: "Obuna bo‘lish"
   muteList: "Ovozni o‘chirish"
   blockingList: "Bloklangan foydalanuvchilar"
@@ -1082,6 +1088,12 @@ _webhookSettings:
   _events:
     renote: "Qayta qayd qilinganda"
     mention: "Eslanganda"
+_abuseReport:
+  _notificationRecipient:
+    _recipientType:
+      mail: "Email"
 _moderationLogTypes:
   suspend: "To'xtatish"
   resetPassword: "Parolni tiklash"
+_reversi:
+  total: "Jami"

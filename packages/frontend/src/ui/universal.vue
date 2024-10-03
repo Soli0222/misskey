@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -26,7 +26,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 	<div v-if="isMobile" ref="navFooter" :class="$style.nav">
 		<button :class="$style.navButton" class="_button" @click="drawerMenuShowing = true"><i :class="$style.navButtonIcon" class="ti ti-menu-2"></i><span v-if="menuIndicated" :class="$style.navButtonIndicator"><i class="_indicatorCircle"></i></span></button>
-		<button :class="$style.navButton" class="_button" @click="mainRouter.currentRoute.value.name === 'index' ? top() : mainRouter.push('/')"><i :class="$style.navButtonIcon" class="ti ti-home"></i></button>
+		<button :class="$style.navButton" class="_button" @click="isRoot ? top() : mainRouter.push('/')"><i :class="$style.navButtonIcon" class="ti ti-home"></i></button>
 		<button :class="$style.navButton" class="_button" @click="mainRouter.push('/my/notifications')">
 			<i :class="$style.navButtonIcon" class="ti ti-bell"></i>
 			<span v-if="$i?.hasUnreadNotification" :class="$style.navButtonIndicator">
@@ -98,24 +98,27 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { defineAsyncComponent, provide, onMounted, computed, ref, watch, shallowRef, Ref } from 'vue';
 import XCommon from './_common_/common.vue';
 import type MkStickyContainer from '@/components/global/MkStickyContainer.vue';
-import { instanceName } from '@/config.js';
+import { instanceName } from '@@/js/config.js';
 import XDrawerMenu from '@/ui/_common_/navbar-for-mobile.vue';
 import * as os from '@/os.js';
 import { defaultStore } from '@/store.js';
 import { navbarItemDef } from '@/navbar.js';
 import { i18n } from '@/i18n.js';
 import { $i } from '@/account.js';
-import { PageMetadata, provideMetadataReceiver } from '@/scripts/page-metadata.js';
+import { PageMetadata, provideMetadataReceiver, provideReactiveMetadata } from '@/scripts/page-metadata.js';
 import { deviceKind } from '@/scripts/device-kind.js';
 import { miLocalStorage } from '@/local-storage.js';
-import { CURRENT_STICKY_BOTTOM } from '@/const.js';
+import { CURRENT_STICKY_BOTTOM } from '@@/js/const.js';
 import { useScrollPositionManager } from '@/nirax.js';
-import { mainRouter } from '@/global/router/main.js';
+import { mainRouter } from '@/router/main.js';
+import { isLink } from '@@/js/is-link.js';
 
 const XWidgets = defineAsyncComponent(() => import('./universal.widgets.vue'));
 const XSidebar = defineAsyncComponent(() => import('@/ui/_common_/navbar.vue'));
 const XStatusBars = defineAsyncComponent(() => import('@/ui/_common_/statusbars.vue'));
 const XAnnouncements = defineAsyncComponent(() => import('@/ui/_common_/announcements.vue'));
+
+const isRoot = computed(() => mainRouter.currentRoute.value.name === 'index');
 
 const DESKTOP_THRESHOLD = 1100;
 const MOBILE_THRESHOLD = 500;
@@ -127,18 +130,24 @@ window.addEventListener('resize', () => {
 	isMobile.value = deviceKind === 'smartphone' || window.innerWidth <= MOBILE_THRESHOLD;
 });
 
-const pageMetadata = ref<null | PageMetadata>();
+const pageMetadata = ref<null | PageMetadata>(null);
 const widgetsShowing = ref(false);
 const navFooter = shallowRef<HTMLElement>();
 const contents = shallowRef<InstanceType<typeof MkStickyContainer>>();
 
 provide('router', mainRouter);
-provideMetadataReceiver((info) => {
-	pageMetadata.value = info.value;
+provideMetadataReceiver((metadataGetter) => {
+	const info = metadataGetter();
+	pageMetadata.value = info;
 	if (pageMetadata.value) {
-		document.title = `${pageMetadata.value.title} | ${instanceName}`;
+		if (isRoot.value && pageMetadata.value.title === instanceName) {
+			document.title = pageMetadata.value.title;
+		} else {
+			document.title = `${pageMetadata.value.title} | ${instanceName}`;
+		}
 	}
 });
+provideReactiveMetadata(pageMetadata);
 
 const menuIndicated = computed(() => {
 	for (const def in navbarItemDef) {
@@ -187,12 +196,6 @@ onMounted(() => {
 });
 
 const onContextmenu = (ev) => {
-	const isLink = (el: HTMLElement) => {
-		if (el.tagName === 'A') return true;
-		if (el.parentElement) {
-			return isLink(el.parentElement);
-		}
-	};
 	if (isLink(ev.target)) return;
 	if (['INPUT', 'TEXTAREA', 'IMG', 'VIDEO', 'CANVAS'].includes(ev.target.tagName) || ev.target.attributes['contenteditable']) return;
 	if (window.getSelection()?.toString() !== '') return;
@@ -419,7 +422,7 @@ $widgets-hide-threshold: 1090px;
 	}
 
 	&:active {
-		background: var(--X2);
+		background: hsl(from var(--panel) h s calc(l - 2));
 	}
 }
 
@@ -429,11 +432,11 @@ $widgets-hide-threshold: 1090px;
 	color: var(--fgOnAccent);
 
 	&:hover {
-		background: linear-gradient(90deg, var(--X8), var(--X8));
+		background: linear-gradient(90deg, hsl(from var(--accent) h s calc(l + 5)), hsl(from var(--accent) h s calc(l + 5)));
 	}
 
 	&:active {
-		background: linear-gradient(90deg, var(--X8), var(--X8));
+		background: linear-gradient(90deg, hsl(from var(--accent) h s calc(l + 5)), hsl(from var(--accent) h s calc(l + 5)));
 	}
 }
 
@@ -448,7 +451,7 @@ $widgets-hide-threshold: 1090px;
 	left: 0;
 	color: var(--indicator);
 	font-size: 16px;
-	animation: blink 1s infinite;
+	animation: global-blink 1s infinite;
 
 	&:has(.itemIndicateValueIcon) {
 		animation: none;

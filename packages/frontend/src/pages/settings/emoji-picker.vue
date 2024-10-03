@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -23,7 +23,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					>
 						<template #item="{element}">
 							<button class="_button" :class="$style.emojisItem" @click="removeReaction(element, $event)">
-								<MkCustomEmoji v-if="element[0] === ':'" :name="element" :normal="true"/>
+								<MkCustomEmoji v-if="element[0] === ':'" :name="element" :normal="true" :fallbackToImage="true"/>
 								<MkEmoji v-else :emoji="element" :normal="true"/>
 							</button>
 						</template>
@@ -63,7 +63,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					>
 						<template #item="{element}">
 							<button class="_button" :class="$style.emojisItem" @click="removeEmoji(element, $event)">
-								<MkCustomEmoji v-if="element[0] === ':'" :name="element" :normal="true"/>
+								<MkCustomEmoji v-if="element[0] === ':'" :name="element" :normal="true" :fallbackToImage="true"/>
 								<MkEmoji v-else :emoji="element" :normal="true"/>
 							</button>
 						</template>
@@ -113,10 +113,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<option :value="4">{{ i18n.ts.large }}+</option>
 			</MkRadios>
 
-			<MkSwitch v-model="emojiPickerUseDrawerForMobile">
-				{{ i18n.ts.useDrawerReactionPickerForMobile }}
+			<MkSelect v-model="emojiPickerStyle">
+				<template #label>{{ i18n.ts.style }}</template>
 				<template #caption>{{ i18n.ts.needReloadToApply }}</template>
-			</MkSwitch>
+				<option value="auto">{{ i18n.ts.auto }}</option>
+				<option value="popup">{{ i18n.ts.popup }}</option>
+				<option value="drawer">{{ i18n.ts.drawer }}</option>
+			</MkSelect>
 		</div>
 	</FormSection>
 </div>
@@ -128,7 +131,7 @@ import Sortable from 'vuedraggable';
 import MkRadios from '@/components/MkRadios.vue';
 import MkButton from '@/components/MkButton.vue';
 import FormSection from '@/components/form/section.vue';
-import MkSwitch from '@/components/MkSwitch.vue';
+import MkSelect from '@/components/MkSelect.vue';
 import * as os from '@/os.js';
 import { defaultStore } from '@/store.js';
 import { i18n } from '@/i18n.js';
@@ -146,7 +149,7 @@ const pinnedEmojis: Ref<string[]> = ref(deepClone(defaultStore.state.pinnedEmoji
 const emojiPickerScale = computed(defaultStore.makeGetterSetter('emojiPickerScale'));
 const emojiPickerWidth = computed(defaultStore.makeGetterSetter('emojiPickerWidth'));
 const emojiPickerHeight = computed(defaultStore.makeGetterSetter('emojiPickerHeight'));
-const emojiPickerUseDrawerForMobile = computed(defaultStore.makeGetterSetter('emojiPickerUseDrawerForMobile'));
+const emojiPickerStyle = computed(defaultStore.makeGetterSetter('emojiPickerStyle'));
 
 const removeReaction = (reaction: string, ev: MouseEvent) => remove(pinnedEmojisForReaction, reaction, ev);
 const chooseReaction = (ev: MouseEvent) => pickEmoji(pinnedEmojisForReaction, ev);
@@ -157,7 +160,7 @@ const chooseEmoji = (ev: MouseEvent) => pickEmoji(pinnedEmojis, ev);
 const setDefaultEmoji = () => setDefault(pinnedEmojis);
 
 function previewReaction(ev: MouseEvent) {
-	reactionPicker.show(getHTMLElement(ev));
+	reactionPicker.show(getHTMLElement(ev), null);
 }
 
 function previewEmoji(ev: MouseEvent) {
@@ -213,7 +216,7 @@ async function pickEmoji(itemsRef: Ref<string[]>, ev: MouseEvent) {
 	os.pickEmoji(getHTMLElement(ev), {
 		showPinned: false,
 	}).then(it => {
-		const emoji = it as string;
+		const emoji = it;
 		if (!itemsRef.value.includes(emoji)) {
 			itemsRef.value.push(emoji);
 		}
@@ -237,10 +240,10 @@ watch(pinnedEmojis, () => {
 	deep: true,
 });
 
-definePageMetadata({
+definePageMetadata(() => ({
 	title: i18n.ts.emojiPicker,
 	icon: 'ti ti-mood-happy',
-});
+}));
 </script>
 
 <style lang="scss" module>

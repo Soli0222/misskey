@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: syuilo and other misskey contributors
+SPDX-FileCopyrightText: syuilo and misskey-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -23,7 +23,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<MkButton inline @click="disableAll">{{ i18n.ts.disableAll }}</MkButton>
 				<MkButton inline @click="enableAll">{{ i18n.ts.enableAll }}</MkButton>
 			</div>
-			<MkSwitch v-for="ntype in notificationTypes" :key="ntype" v-model="typesMap[ntype].value">{{ i18n.t(`_notification._types.${ntype}`) }}</MkSwitch>
+			<MkSwitch v-for="ntype in notificationTypes" :key="ntype" v-model="typesMap[ntype].value">{{ i18n.ts._notification._types[ntype] }}</MkSwitch>
 		</div>
 	</MkSpacer>
 </MkModalWindow>
@@ -35,7 +35,7 @@ import MkSwitch from './MkSwitch.vue';
 import MkInfo from './MkInfo.vue';
 import MkButton from './MkButton.vue';
 import MkModalWindow from '@/components/MkModalWindow.vue';
-import { notificationTypes } from '@/const.js';
+import { notificationTypes } from '@@/js/const.js';
 import { i18n } from '@/i18n.js';
 
 type TypesMap = Record<typeof notificationTypes[number], Ref<boolean>>
