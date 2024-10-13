@@ -3736,6 +3736,7 @@ export type components = {
         }[];
       isBot?: boolean;
       isCat?: boolean;
+			isNoCat?: boolean;
       isSheep?: boolean;
       isDsite?: boolean;
       instance?: {
@@ -19841,6 +19842,7 @@ export type operations = {
           preventAiLearning?: boolean;
           isBot?: boolean;
           isCat?: boolean;
+					isNoCat?: boolean;
           isSheep?: boolean;
           isDsite?: boolean;
           injectFeaturedNote?: boolean;

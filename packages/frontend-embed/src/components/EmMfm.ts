@@ -40,6 +40,7 @@ type MfmProps = {
 	emojiUrls?: Record<string, string>;
 	rootScale?: number;
 	nyaize?: boolean | 'respect';
+	nonyaize?: boolean | 'respect';
 	myaize?: boolean | 'respect';
 	dlsize?: boolean | 'respect';
 	parsedNodes?: mfm.MfmNode[] | null;
@@ -53,6 +54,7 @@ type MfmEvents = {
 export default function (props: MfmProps, { emit }: { emit: SetupContext<MfmEvents>['emit'] }) {
 	const isNote = props.isNote ?? true;
 	const shouldNyaize = props.nyaize ? props.nyaize === 'respect' ? props.author?.isCat : false : false;
+	const shouldNoNyaize = props.nonyaize ? props.nonyaize === 'respect' ? props.author?.isNoCat : false : false;
 	const shouldMyaize = props.myaize ? props.myaize === 'respect' ? props.author?.isSheep : false : false;
 	const shouldDlsize = props.dlsize ? props.dlsize === 'respect' ? props.author?.isDsite : false : false;
 
@@ -86,7 +88,7 @@ export default function (props: MfmProps, { emit }: { emit: SetupContext<MfmEven
 		switch (token.type) {
 			case 'text': {
 				let text = token.props.text.replace(/(\r\n|\n|\r)/g, '\n');
-				if (!disableNyaize && shouldNyaize) {
+				if (!disableNyaize && shouldNyaize && !shouldNoNyaize) {
 					text = Misskey.nyaize(text);
 				}
 				if (!disableMyaize && shouldMyaize) {
@@ -279,7 +281,7 @@ export default function (props: MfmProps, { emit }: { emit: SetupContext<MfmEven
 						if (token.children.length === 1) {
 							const child = token.children[0];
 							let text = child.type === 'text' ? child.props.text : '';
-							if (!disableNyaize && shouldNyaize) {
+							if (!disableNyaize && shouldNyaize && !shouldNoNyaize) {
 								text = Misskey.nyaize(text);
 							}
 							if (!disableMyaize && shouldMyaize) {
@@ -292,7 +294,7 @@ export default function (props: MfmProps, { emit }: { emit: SetupContext<MfmEven
 						} else {
 							const rt = token.children.at(-1)!;
 							let text = rt.type === 'text' ? rt.props.text : '';
-							if (!disableNyaize && shouldNyaize) {
+							if (!disableNyaize && shouldNyaize && !shouldNoNyaize) {
 								text = Misskey.nyaize(text);
 							}
 							if (!disableMyaize && shouldMyaize) {

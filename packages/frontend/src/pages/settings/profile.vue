@@ -109,6 +109,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 		<div class="_gaps_m">
 			<MkSwitch v-model="profile.isCat">{{ i18n.ts.flagAsCat }}<template #caption>{{ i18n.ts.flagAsCatDescription }}</template></MkSwitch>
+			<MkSwitch v-model="profile.isNoCat">{{ i18n.ts.flagAsNoCat }}<template #caption>{{ i18n.ts.flagAsNoCatDescription }}</template></MkSwitch>
 			<MkSwitch v-model="profile.isSheep">{{ i18n.ts.flagAsSheep }}<template #caption>{{ i18n.ts.flagAsSheepDescription }}</template></MkSwitch>
 			<MkSwitch v-model="profile.isDsite">{{ i18n.ts.flagAsDsite }}<template #caption>{{ i18n.ts.flagAsDsiteDescription }}</template></MkSwitch>
 			<MkSwitch v-model="profile.isBot">{{ i18n.ts.flagAsBot }}<template #caption>{{ i18n.ts.flagAsBotDescription }}</template></MkSwitch>
@@ -153,6 +154,7 @@ const profile = reactive({
 	lang: $i.lang,
 	isBot: $i.isBot ?? false,
 	isCat: $i.isCat ?? false,
+	isNoCat: $i.isNoCat ?? false,
 	isSheep: $i.isSheep ?? false,
 	isDsite: $i.isDsite ?? false,
 });
@@ -206,6 +208,7 @@ function save() {
 		lang: profile.lang || null,
 		isBot: !!profile.isBot,
 		isCat: !!profile.isCat,
+		isNoCat: !!profile.isNoCat,
 		isSheep: !!profile.isSheep,
 		isDsite: !!profile.isDsite,
 	});

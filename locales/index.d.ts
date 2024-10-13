@@ -731,6 +731,14 @@ export interface Locale extends ILocale {
      */
     "flagAsCatDescription": string;
     /**
+     * なああああああああああああああ！！！！！！！！！！！！
+     */
+    "flagAsNoCat": string;
+    /**
+     * ななな？？
+     */
+    "flagAsNoCatDescription": string;
+    /**
      * みゃああああああああああああああ！！！！！！！！！！！！
      */
     "flagAsSheep": string;

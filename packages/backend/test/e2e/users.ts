@@ -40,6 +40,7 @@ describe('ユーザー', () => {
 			avatarDecorations: user.avatarDecorations,
 			isBot: user.isBot,
 			isCat: user.isCat,
+			isNoCat: user.isNoCat,
 			isSheep: user.isSheep,
 			isDsite: user.isDsite,
 			instance: user.instance,
@@ -312,6 +313,7 @@ describe('ユーザー', () => {
 		assert.deepStrictEqual(response.avatarDecorations, []);
 		assert.strictEqual(response.isBot, false);
 		assert.strictEqual(response.isCat, false);
+		assert.strictEqual(response.isNoCat, false);
 		assert.strictEqual(response.isSheep, false);
 		assert.strictEqual(response.isDsite, false);
 		assert.strictEqual(response.instance, undefined);
@@ -451,6 +453,8 @@ describe('ユーザー', () => {
 		{ parameters: () => ({ isBot: false }) },
 		{ parameters: () => ({ isCat: true }) },
 		{ parameters: () => ({ isCat: false }) },
+		{ parameters: () => ({ isNoCat: true }) },
+		{ parameters: () => ({ isNoCat: false }) },
 		{ parameters: (): object => ({ isSheep: true }) },
 		{ parameters: (): object => ({ isSheep: false }) },
 		{ parameters: (): object => ({ isDsite: true }) },

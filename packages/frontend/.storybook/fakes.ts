@@ -248,6 +248,7 @@ export function userDetailed(id = 'someuserid', username = 'miskist', host: enti
 		isBlocking: false,
 		isBot: false,
 		isCat: false,
+		isNoCat: false,
 		isSheep: false,
 		isDsite: false,
 		isFollowed: false,

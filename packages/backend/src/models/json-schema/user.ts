@@ -115,6 +115,10 @@ export const packedUserLiteSchema = {
 			type: 'boolean',
 			nullable: false, optional: true,
 		},
+		isNoCat: {
+			type: 'boolean',
+			nullable: false, optional: true,
+		},
 		isSheep: {
 			type: 'boolean',
 			nullable: false, optional: true,
