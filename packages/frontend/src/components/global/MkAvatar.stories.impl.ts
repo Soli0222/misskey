@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { StoryObj } from '@storybook/vue3';
 import { userDetailed } from '../../../.storybook/fakes.js';
 import MkAvatar from './MkAvatar.vue';
@@ -57,6 +56,26 @@ export const ProfilePageCat = {
 		user: {
 			...userDetailed(),
 			isCat: true,
+		},
+	},
+	parameters: {
+		...ProfilePage.parameters,
+		chromatic: {
+			/* Your story couldn’t be captured because it exceeds our 25,000,000px limit. Its dimensions are 5,504,893x5,504,892px. Possible ways to resolve:
+			 * * Separate pages into components
+			 * * Minimize the number of very large elements in a story
+			 */
+			disableSnapshot: true,
+		},
+	},
+} satisfies StoryObj<typeof MkAvatar>;
+export const ProfilePageNoCat = {
+	...ProfilePage,
+	args: {
+		...ProfilePage.args,
+		user: {
+			...userDetailed(),
+			isNoCat: true,
 		},
 	},
 	parameters: {

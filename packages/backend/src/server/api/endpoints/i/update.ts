@@ -173,6 +173,7 @@ export const paramDef = {
 		preventAiLearning: { type: 'boolean' },
 		isBot: { type: 'boolean' },
 		isCat: { type: 'boolean' },
+		isNoCat: { type: 'boolean' },
 		isSheep: { type: 'boolean' },
 		isDsite: { type: 'boolean' },
 		injectFeaturedNote: { type: 'boolean' },
@@ -325,6 +326,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			if (typeof ps.noCrawle === 'boolean') profileUpdates.noCrawle = ps.noCrawle;
 			if (typeof ps.preventAiLearning === 'boolean') profileUpdates.preventAiLearning = ps.preventAiLearning;
 			if (typeof ps.isCat === 'boolean') updates.isCat = ps.isCat;
+			if (typeof ps.isNoCat === 'boolean') updates.isNoCat = ps.isNoCat;
 			if (typeof ps.isSheep === 'boolean') updates.isSheep = ps.isSheep;
 			if (typeof ps.isDsite === 'boolean') updates.isDsite = ps.isDsite;
 			if (typeof ps.injectFeaturedNote === 'boolean') profileUpdates.injectFeaturedNote = ps.injectFeaturedNote;
