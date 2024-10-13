@@ -186,6 +186,12 @@ export class MiUser {
 
 	@Column('boolean', {
 		default: false,
+		comment: 'Whether the User is not a cat.',
+	})
+	public isNoCat: boolean;
+
+	@Column('boolean', {
+		default: false,
 		comment: 'Whether the User is a sheep.',
 	})
 	public isSheep: boolean;

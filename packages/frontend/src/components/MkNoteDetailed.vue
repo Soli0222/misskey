@@ -73,6 +73,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					:text="appearNote.cw"
 					:author="appearNote.user"
 					:nyaize="'respect'"
+					:nonyaize="'respect'"
 					:myaize="'respect'"
 					:dlsize="'respect'"
 					:enableEmojiMenu="true"
@@ -89,6 +90,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					:text="appearNote.text"
 					:author="appearNote.user"
 					:nyaize="'respect'"
+					:nonyaize="'respect'"
 					:myaize="'respect'"
 					:dlsize="'respect'"
 					:emojiUrls="appearNote.emojis"
@@ -100,7 +102,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<MkLoading v-if="translating" mini/>
 					<div v-else-if="translation">
 						<b>{{ i18n.tsx.translatedFrom({ x: translation.sourceLang }) }}: </b>
-						<Mfm :text="translation.text" :author="appearNote.user" :nyaize="'respect'" :myaize="'respect'" :dlsize="'respect'" :emojiUrls="appearNote.emojis"/>
+						<Mfm :text="translation.text" :author="appearNote.user" :nyaize="'respect'" :nonyaize="'respect'" :myaize="'respect'" :dlsize="'respect'" :emojiUrls="appearNote.emojis"/>
 					</div>
 				</div>
 				<div v-if="denyaize" :class="$style.translation">
@@ -216,6 +218,7 @@ import { computed, inject, onMounted, provide, ref, shallowRef } from 'vue';
 import * as mfm from 'mfm-js';
 import * as Misskey from 'misskey-js';
 import { isLink } from '@@/js/is-link.js';
+import { host } from '@@/js/config.js';
 import MkNoteSub from '@/components/MkNoteSub.vue';
 import MkNoteSimple from '@/components/MkNoteSimple.vue';
 import MkReactionsViewer from '@/components/MkReactionsViewer.vue';
@@ -239,7 +242,6 @@ import { reactionPicker } from '@/scripts/reaction-picker.js';
 import { extractUrlFromMfm } from '@/scripts/extract-url-from-mfm.js';
 import { $i } from '@/account.js';
 import { i18n } from '@/i18n.js';
-import { host } from '@@/js/config.js';
 import { getNoteClipMenu, getNoteMenu, getRenoteMenu } from '@/scripts/get-note-menu.js';
 import { useNoteCapture } from '@/scripts/use-note-capture.js';
 import { deepClone } from '@/scripts/clone.js';
