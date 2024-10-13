@@ -43,9 +43,6 @@ type MfmProps = {
 	myaize?: boolean | 'respect';
 	dlsize?: boolean | 'respect';
 	parsedNodes?: mfm.MfmNode[] | null;
-	enableEmojiMenu?: boolean;
-	enableEmojiMenuReaction?: boolean;
-	linkNavigationBehavior?: string;
 };
 
 type MfmEvents = {
@@ -54,8 +51,6 @@ type MfmEvents = {
 
 // eslint-disable-next-line import/no-default-export
 export default function (props: MfmProps, { emit }: { emit: SetupContext<MfmEvents>['emit'] }) {
-	provide('linkNavigationBehavior', props.linkNavigationBehavior);
-
 	const isNote = props.isNote ?? true;
 	const shouldNyaize = props.nyaize ? props.nyaize === 'respect' ? props.author?.isCat : false : false;
 	const shouldMyaize = props.myaize ? props.myaize === 'respect' ? props.author?.isSheep : false : false;
@@ -421,8 +416,6 @@ export default function (props: MfmProps, { emit }: { emit: SetupContext<MfmEven
 						normal: props.plain,
 						host: null,
 						useOriginalSize: scale >= 2.5,
-						menu: props.enableEmojiMenu,
-						menuReaction: props.enableEmojiMenuReaction,
 						fallbackToImage: false,
 					})];
 				} else {
