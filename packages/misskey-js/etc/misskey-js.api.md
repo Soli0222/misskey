@@ -3101,7 +3101,9 @@ type SigninWithPasskeyRequest = {
 
 // @public (undocumented)
 type SigninWithPasskeyResponse = {
-    signinResponse: SigninFlowResponse;
+    signinResponse: SigninFlowResponse & {
+        finished: true;
+    };
 };
 
 // @public (undocumented)
