@@ -62,7 +62,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<span v-if="appearNote.localOnly" style="margin-left: 0.5em;" :title="i18n.ts._visibility['disableFederation']"><i class="ti ti-rocket-off"></i></span>
 					</div>
 				</div>
-				<div :class="$style.noteHeaderUsername"><MkAcct :user="appearNote.user"/></div>
+				<div :class="$style.noteHeaderUsernameAndBadgeRoles">
+					<div :class="$style.noteHeaderUsername">
+						<MkAcct :user="appearNote.user"/>
+					</div>
+					<div v-if="appearNote.user.badgeRoles" :class="$style.noteHeaderBadgeRoles">
+						<img v-for="(role, i) in appearNote.user.badgeRoles" :key="i" v-tooltip="role.name" :class="$style.noteHeaderBadgeRole" :src="role.iconUrl!"/>
+					</div>
+				</div>
 				<MkInstanceTicker v-if="showTicker" :instance="appearNote.user.instance"/>
 			</div>
 		</header>
@@ -429,7 +436,7 @@ if (appearNote.value.reactionAcceptance === 'likeOnly') {
 }
 
 function renote() {
-	pleaseLogin(undefined, pleaseLoginContext.value);
+	pleaseLogin({ openOnRemote: pleaseLoginContext.value });
 	showMovedDialog();
 
 	const { menu } = getRenoteMenu({ note: note.value, renoteButton });
@@ -437,7 +444,7 @@ function renote() {
 }
 
 function reply(): void {
-	pleaseLogin(undefined, pleaseLoginContext.value);
+	pleaseLogin({ openOnRemote: pleaseLoginContext.value });
 	showMovedDialog();
 	os.post({
 		reply: appearNote.value,
@@ -448,7 +455,7 @@ function reply(): void {
 }
 
 function react(): void {
-	pleaseLogin(undefined, pleaseLoginContext.value);
+	pleaseLogin({ openOnRemote: pleaseLoginContext.value });
 	showMovedDialog();
 	if (appearNote.value.reactionAcceptance === 'likeOnly') {
 		sound.playMisskeySfx('reaction');
@@ -547,7 +554,7 @@ async function toggleFavorite(favorite: boolean) {
 
 function showRenoteMenu(): void {
 	if (!isMyRenote) return;
-	pleaseLogin(undefined, pleaseLoginContext.value);
+	pleaseLogin({ openOnRemote: pleaseLoginContext.value });
 	os.popupMenu([{
 		text: i18n.ts.unrenote,
 		icon: 'ti ti-trash',
@@ -727,10 +734,28 @@ function loadConversation() {
 	float: right;
 }
 
+.noteHeaderUsernameAndBadgeRoles {
+	display: flex;
+}
+
 .noteHeaderUsername {
 	margin-bottom: 2px;
+	margin-right: 0.5em;
 	line-height: 1.3;
 	word-wrap: anywhere;
+}
+
+.noteHeaderBadgeRoles {
+	margin: 0 .5em 0 0;
+}
+
+.noteHeaderBadgeRole {
+	height: 1.3em;
+	vertical-align: -20%;
+
+	& + .noteHeaderBadgeRole {
+		margin-left: 0.2em;
+	}
 }
 
 .noteContent {
