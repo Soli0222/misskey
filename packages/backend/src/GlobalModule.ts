@@ -7,14 +7,14 @@ import { Global, Inject, Module } from '@nestjs/common';
 import * as Redis from 'ioredis';
 import { DataSource } from 'typeorm';
 import { MeiliSearch } from 'meilisearch';
+import { MiMeta } from '@/models/Meta.js';
 import { DI } from './di-symbols.js';
 import { Config, loadConfig } from './config.js';
 import { createPostgresDataSource } from './postgres.js';
 import { RepositoryModule } from './models/RepositoryModule.js';
 import { allSettled } from './misc/promise-tracker.js';
-import type { Provider, OnApplicationShutdown } from '@nestjs/common';
-import { MiMeta } from '@/models/Meta.js';
 import { GlobalEvents } from './core/GlobalEventService.js';
+import type { Provider, OnApplicationShutdown } from '@nestjs/common';
 
 const $config: Provider = {
 	provide: DI.config,
@@ -35,7 +35,7 @@ const $meilisearch: Provider = {
 	useFactory: (config: Config) => {
 		if (config.meilisearch) {
 			return new MeiliSearch({
-				host: `${config.meilisearch.ssl ? 'https' : 'http'}://${config.meilisearch.host}:${config.meilisearch.port}`,
+				host: `${config.meilisearch.ssl ? 'https' : 'http'}://${config.meilisearch.host}${config.meilisearch.port ? ':' + config.meilisearch.port : ''}`,
 				apiKey: config.meilisearch.apiKey,
 			});
 		} else {
