@@ -2,10 +2,10 @@
  * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
-
-import { StoryObj } from '@storybook/vue3';
+ 
 import { userDetailed } from '../../../.storybook/fakes.js';
 import MkAvatar from './MkAvatar.vue';
+import type { StoryObj } from '@storybook/vue3';
 const common = {
 	render(args) {
 		return {
@@ -128,4 +128,4 @@ export const ProfilePageDsite = {
 			disableSnapshot: true,
 		},
 	},
-}satisfies StoryObj<typeof MkAvatar>;
+} satisfies StoryObj<typeof MkAvatar>;
