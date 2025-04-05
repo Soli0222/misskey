@@ -178,6 +178,21 @@ export const searchIndexes: SearchIndexItem[] = [
 					},
 					{
 						id: 'eVoViiF3h',
+						label: i18n.ts.flagAsNoCat,
+						keywords: ['nocat'],
+					},
+					{
+						id: 'tPmOrkctj',
+						label: i18n.ts.flagAsSheep,
+						keywords: ['sheep'],
+					},
+					{
+						id: 'sYtP9g5qO',
+						label: i18n.ts.flagAsDsite,
+						keywords: ['dsite'],
+					},
+					{
+						id: 'A5YF99IZU',
 						label: i18n.ts.flagAsBot,
 						keywords: ['bot'],
 					},
