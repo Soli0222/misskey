@@ -97,6 +97,7 @@ import MkButton from '@/components/MkButton.vue';
 import { i18n } from '@/i18n.js';
 import MkSelect from '@/components/MkSelect.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
+import MkTab from '@/components/MkTab.vue';
 import { misskeyApiGet } from '@/utility/misskey-api.js';
 
 const gameMode = ref<'normal' | 'square' | 'yen' | 'sweets' | 'space'>('normal');
