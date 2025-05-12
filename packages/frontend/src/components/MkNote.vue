@@ -85,7 +85,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<MkLoading v-if="translating" mini/>
 							<div v-else-if="translation">
 								<b>{{ i18n.tsx.translatedFrom({ x: translation.sourceLang }) }}: </b>
-								<Mfm :text="translation.text" :author="appearNote.user" :nyaize="'respect'" :myaize="'respect'" :dlsize="'respect'" :emojiUrls="appearNote.emojis" class="_selectable"/>
+								<Mfm :text="translation.text" :author="appearNote.user" :nyaize="'respect'" :nonyaize="'respect'" :myaize="'respect'" :dlsize="'respect'" :emojiUrls="appearNote.emojis" class="_selectable"/>
 							</div>
 						</div>
 						<div v-if="denyaize" :class="$style.translation">
