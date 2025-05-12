@@ -428,7 +428,7 @@ const reactionsPagination = computed(() => ({
 	},
 }));
 
-useNoteCapture({
+const { subscribe: subscribeManuallyToNoteCapture } = useNoteCapture({
 	note: appearNote,
 	parentNote: note,
 	$note: $appearNote,
@@ -484,6 +484,9 @@ function renote() {
 
 	const { menu } = getRenoteMenu({ note: note, renoteButton });
 	os.popupMenu(menu, renoteButton.value);
+
+	// リノート後は反応が来る可能性があるので手動で購読する
+	subscribeManuallyToNoteCapture();
 }
 
 function reply(): void {
@@ -558,6 +561,11 @@ function undoReact(targetNote: Misskey.entities.Note): void {
 	if (!oldReaction) return;
 	misskeyApi('notes/reactions/delete', {
 		noteId: targetNote.id,
+	}).then(() => {
+		noteEvents.emit(`unreacted:${appearNote.id}`, {
+			userId: $i!.id,
+			reaction: oldReaction,
+		});
 	});
 }
 
