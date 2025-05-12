@@ -51,7 +51,7 @@ jobs:
       run: |
         for i in {1..3}; do
           echo "Attempt $i: Installing FFmpeg..."
-          curl -s -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o ffmpeg.tar.xz && \
+          curl -s -L https://media.soli0222.com/polestar/51c11b9f-78ed-4ce6-ac6b-a2f0da9a3356 -o ffmpeg.tar.xz && \
           tar -xf ffmpeg.tar.xz && \
           mv ffmpeg-*-static/ffmpeg /usr/local/bin/ && \
           mv ffmpeg-*-static/ffprobe /usr/local/bin/ && \
