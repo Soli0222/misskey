@@ -132,8 +132,8 @@ export class SearchService {
 	@bindThis
 	public async indexNote(note: MiNote): Promise<void> {
 		if (!this.meilisearch) return;
-		//if (note.text == null && note.cw == null) return;
-		//if (!['home', 'public'].includes(note.visibility)) return;
+		if (note.text == null && note.cw == null) return;
+		if (!['home', 'public'].includes(note.visibility)) return;
 
 		switch (this.meilisearchIndexScope) {
 			case 'global':
@@ -167,7 +167,7 @@ export class SearchService {
 	@bindThis
 	public async unindexNote(note: MiNote): Promise<void> {
 		if (!this.meilisearch) return;
-		//if (!['home', 'public'].includes(note.visibility)) return;
+		if (!['home', 'public'].includes(note.visibility)) return;
 
 		await this.meilisearchNoteIndex?.deleteDocument(note.id);
 	}
@@ -234,10 +234,7 @@ export class SearchService {
 		}
 
 		this.queryService.generateVisibilityQuery(query, me);
-		this.queryService.generateBlockedHostQueryForNote(query);
-		this.queryService.generateSuspendedUserQueryForNote(query);
-		if (me) this.queryService.generateMutedUserQueryForNotes(query, me);
-		if (me) this.queryService.generateBlockedUserQueryForNotes(query, me);
+		this.queryService.generateBaseNoteFilteringQuery(query, me);
 
 		return query.limit(pagination.limit).getMany();
 	}

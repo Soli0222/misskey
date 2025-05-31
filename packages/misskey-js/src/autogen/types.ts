@@ -1799,6 +1799,15 @@ export type paths = {
      */
     post: operations['drive___files___find-by-hash'];
   };
+  '/drive/files/move-bulk': {
+    /**
+     * drive/files/move-bulk
+     * @description No description provided.
+     *
+     * **Credential required**: *Yes* / **Permission**: *write:drive*
+     */
+    post: operations['drive___files___move-bulk'];
+  };
   '/drive/files/show': {
     /**
      * drive/files/show
@@ -3247,6 +3256,15 @@ export type paths = {
      */
     post: operations['notes___show'];
   };
+  '/notes/show-partial-bulk': {
+    /**
+     * notes/show-partial-bulk
+     * @description No description provided.
+     *
+     * **Credential required**: *No*
+     */
+    post: operations['notes___show-partial-bulk'];
+  };
   '/notes/state': {
     /**
      * notes/state
@@ -4475,6 +4493,7 @@ export type components = {
       url?: string;
       reactionAndUserPairCache?: string[];
       clippedCount?: number;
+      hasPoll?: boolean;
       myReaction?: string | null;
     };
     NoteReaction: {
@@ -4930,6 +4949,32 @@ export type components = {
       failed: number;
       delayed: number;
     };
+    QueueMetrics: {
+      meta: {
+        count: number;
+        prevTS: number;
+        prevCount: number;
+      };
+      data: number[];
+      count: number;
+    };
+    QueueJob: {
+      id: string;
+      name: string;
+      data: Record<string, never>;
+      opts: Record<string, never>;
+      timestamp: number;
+      processedOn?: number;
+      processedBy?: string;
+      finishedOn?: number;
+      progress: Record<string, never>;
+      attempts: number;
+      delay: number;
+      failedReason: string;
+      stacktrace: string[];
+      returnValue: Record<string, never>;
+      isFailed: boolean;
+    };
     Antenna: {
       /** Format: id */
       id: string;
@@ -5222,6 +5267,7 @@ export type components = {
       canHideAds: boolean;
       driveCapacityMb: number;
       maxFileSizeMb: number;
+      uploadableFileTypes: string[];
       alwaysMarkNsfw: boolean;
       canUpdateBioMedia: boolean;
       pinLimit: number;
@@ -5527,6 +5573,7 @@ export type components = {
       name: string;
       description: string;
       isMuted?: boolean;
+      invitationExists?: boolean;
     };
     ChatRoomInvitation: {
       id: string;
@@ -7262,8 +7309,9 @@ export type operations = {
       content: {
         'application/json': {
           /** Format: misskey:id */
-          fileId?: string;
-          url?: string;
+          fileId: string;
+        } | {
+          url: string;
         };
       };
     };
@@ -8049,10 +8097,12 @@ export type operations = {
   admin___emoji___update: {
     requestBody: {
       content: {
-        'application/json': {
+        'application/json': ({
           /** Format: misskey:id */
-          id?: string;
-          name?: string;
+          id: string;
+        } | {
+          name: string;
+        }) & ({
           /** Format: misskey:id */
           fileId?: string;
           /** @description Use `null` to reset the category. */
@@ -8062,7 +8112,7 @@ export type operations = {
           isSensitive?: boolean;
           localOnly?: boolean;
           roleIdsThatCanBeUsedThisEmojiAsReaction?: string[];
-        };
+        });
       };
     };
     responses: {
@@ -8762,6 +8812,7 @@ export type operations = {
             uri: string;
             version: string;
             urlPreviewEnabled: boolean;
+            urlPreviewAllowRedirect: boolean;
             urlPreviewTimeout: number;
             urlPreviewMaximumContentLength: number;
             urlPreviewRequireContentLength: boolean;
@@ -8774,6 +8825,12 @@ export type operations = {
                 software: string;
                 versionRange: string;
               }[];
+            singleUserMode: boolean;
+            /** @enum {string} */
+            ugcVisibilityForVisitor: 'all' | 'local' | 'none';
+            proxyRemoteFiles: boolean;
+            signToActivityPubGet: boolean;
+            allowExternalApRedirect: boolean;
           };
         };
       };
@@ -9020,15 +9077,17 @@ export type operations = {
         'application/json': {
           /** @enum {string} */
           queue: 'system' | 'endedPollNotification' | 'deliver' | 'inbox' | 'db' | 'relationship' | 'objectStorage' | 'userWebhookDeliver' | 'systemWebhookDeliver';
-          state: ('active' | 'wait' | 'delayed' | 'completed' | 'failed')[];
+          state: ('active' | 'wait' | 'delayed' | 'completed' | 'failed' | 'paused')[];
           search?: string;
         };
       };
     };
     responses: {
-      /** @description OK (without any results) */
-      204: {
-        content: never;
+      /** @description OK (with results) */
+      200: {
+        content: {
+          'application/json': components['schemas']['QueueJob'][];
+        };
       };
       /** @description Client error */
       400: {
@@ -9130,9 +9189,43 @@ export type operations = {
       };
     };
     responses: {
-      /** @description OK (without any results) */
-      204: {
-        content: never;
+      /** @description OK (with results) */
+      200: {
+        content: {
+          'application/json': {
+            /** @enum {string} */
+            name: 'system' | 'endedPollNotification' | 'deliver' | 'inbox' | 'db' | 'relationship' | 'objectStorage' | 'userWebhookDeliver' | 'systemWebhookDeliver';
+            qualifiedName: string;
+            counts: {
+              [key: string]: number;
+            };
+            isPaused: boolean;
+            metrics: {
+              completed: components['schemas']['QueueMetrics'];
+              failed: components['schemas']['QueueMetrics'];
+            };
+            db: {
+              version: string;
+              /** @enum {string} */
+              mode: 'cluster' | 'standalone' | 'sentinel';
+              runId: string;
+              processId: string;
+              port: number;
+              os: string;
+              uptime: number;
+              memory: {
+                total: number;
+                used: number;
+                fragmentationRatio: number;
+                peak: number;
+              };
+              clients: {
+                blocked: number;
+                connected: number;
+              };
+            };
+          };
+        };
       };
       /** @description Client error */
       400: {
@@ -9174,9 +9267,22 @@ export type operations = {
    */
   admin___queue___queues: {
     responses: {
-      /** @description OK (without any results) */
-      204: {
-        content: never;
+      /** @description OK (with results) */
+      200: {
+        content: {
+          'application/json': ({
+              /** @enum {string} */
+              name: 'system' | 'endedPollNotification' | 'deliver' | 'inbox' | 'db' | 'relationship' | 'objectStorage' | 'userWebhookDeliver' | 'systemWebhookDeliver';
+              counts: {
+                [key: string]: number;
+              };
+              isPaused: boolean;
+              metrics: {
+                completed: components['schemas']['QueueMetrics'];
+                failed: components['schemas']['QueueMetrics'];
+              };
+            })[];
+        };
       };
       /** @description Client error */
       400: {
@@ -9333,9 +9439,11 @@ export type operations = {
       };
     };
     responses: {
-      /** @description OK (without any results) */
-      204: {
-        content: never;
+      /** @description OK (with results) */
+      200: {
+        content: {
+          'application/json': components['schemas']['QueueJob'];
+        };
       };
       /** @description Client error */
       400: {
@@ -11432,6 +11540,7 @@ export type operations = {
           /** @description [Deprecated] Use "urlPreviewSummaryProxyUrl" instead. */
           summalyProxy?: string | null;
           urlPreviewEnabled?: boolean;
+          urlPreviewAllowRedirect?: boolean;
           urlPreviewTimeout?: number;
           urlPreviewMaximumContentLength?: number;
           urlPreviewRequireContentLength?: boolean;
@@ -11444,6 +11553,12 @@ export type operations = {
               software: string;
               versionRange: string;
             }[];
+          singleUserMode?: boolean;
+          /** @enum {string} */
+          ugcVisibilityForVisitor?: 'all' | 'local' | 'none';
+          proxyRemoteFiles?: boolean;
+          signToActivityPubGet?: boolean;
+          allowExternalApRedirect?: boolean;
         };
       };
     };
@@ -16826,6 +16941,59 @@ export type operations = {
     };
   };
   /**
+   * drive/files/move-bulk
+   * @description No description provided.
+   *
+   * **Credential required**: *Yes* / **Permission**: *write:drive*
+   */
+  'drive___files___move-bulk': {
+    requestBody: {
+      content: {
+        'application/json': {
+          fileIds: string[];
+          /** Format: misskey:id */
+          folderId?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description OK (without any results) */
+      204: {
+        content: never;
+      };
+      /** @description Client error */
+      400: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Authentication error */
+      401: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Forbidden error */
+      403: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description I'm Ai */
+      418: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  /**
    * drive/files/show
    * @description Show the properties of a drive file.
    *
@@ -16836,8 +17004,9 @@ export type operations = {
       content: {
         'application/json': {
           /** Format: misskey:id */
-          fileId?: string;
-          url?: string;
+          fileId: string;
+        } | {
+          url: string;
         };
       };
     };
@@ -22936,9 +23105,10 @@ export type operations = {
       content: {
         'application/json': {
           /** Format: misskey:id */
-          tokenId?: string;
-          token?: string | null;
-        };
+          tokenId: string;
+        } | ({
+          token: string | null;
+        });
       };
     };
     responses: {
@@ -25627,7 +25797,12 @@ export type operations = {
   'notes___search-by-tag': {
     requestBody: {
       content: {
-        'application/json': {
+        'application/json': ({
+          tag: string;
+        } | {
+          /** @description The outer arrays are chained with OR, the inner arrays are chained with AND. */
+          query: string[][];
+        }) & ({
           /** @default null */
           reply?: boolean | null;
           /** @default null */
@@ -25645,10 +25820,7 @@ export type operations = {
           untilId?: string;
           /** @default 10 */
           limit?: number;
-          tag?: string;
-          /** @description The outer arrays are chained with OR, the inner arrays are chained with AND. */
-          query?: string[][];
-        };
+        });
       };
     };
     responses: {
@@ -25710,6 +25882,67 @@ export type operations = {
       200: {
         content: {
           'application/json': components['schemas']['Note'];
+        };
+      };
+      /** @description Client error */
+      400: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Authentication error */
+      401: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Forbidden error */
+      403: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description I'm Ai */
+      418: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+      /** @description Internal server error */
+      500: {
+        content: {
+          'application/json': components['schemas']['Error'];
+        };
+      };
+    };
+  };
+  /**
+   * notes/show-partial-bulk
+   * @description No description provided.
+   *
+   * **Credential required**: *No*
+   */
+  'notes___show-partial-bulk': {
+    requestBody: {
+      content: {
+        'application/json': {
+          noteIds: string[];
+        };
+      };
+    };
+    responses: {
+      /** @description OK (with results) */
+      200: {
+        content: {
+          'application/json': {
+              id: string;
+              reactions: {
+                [key: string]: number;
+              };
+              reactionEmojis: {
+                [key: string]: string;
+              };
+            }[];
         };
       };
       /** @description Client error */
@@ -26672,9 +26905,10 @@ export type operations = {
       content: {
         'application/json': {
           /** Format: misskey:id */
-          pageId?: string;
-          name?: string;
-          username?: string;
+          pageId: string;
+        } | {
+          name: string;
+          username: string;
         };
       };
     };
@@ -28761,18 +28995,20 @@ export type operations = {
   users___followers: {
     requestBody: {
       content: {
-        'application/json': {
+        'application/json': ({
+          /** Format: misskey:id */
+          userId: string;
+        } | ({
+          username: string;
+          /** @description The local host is represented with `null`. */
+          host: string | null;
+        })) & {
           /** Format: misskey:id */
           sinceId?: string;
           /** Format: misskey:id */
           untilId?: string;
           /** @default 10 */
           limit?: number;
-          /** Format: misskey:id */
-          userId?: string;
-          username?: string;
-          /** @description The local host is represented with `null`. */
-          host?: string | null;
         };
       };
     };
@@ -28824,20 +29060,22 @@ export type operations = {
   users___following: {
     requestBody: {
       content: {
-        'application/json': {
+        'application/json': ({
+          /** Format: misskey:id */
+          userId: string;
+        } | ({
+          username: string;
+          /** @description The local host is represented with `null`. */
+          host: string | null;
+        })) & ({
           /** Format: misskey:id */
           sinceId?: string;
           /** Format: misskey:id */
           untilId?: string;
           /** @default 10 */
           limit?: number;
-          /** Format: misskey:id */
-          userId?: string;
-          username?: string;
-          /** @description The local host is represented with `null`. */
-          host?: string | null;
           birthday?: string | null;
-        };
+        });
       };
     };
     responses: {
@@ -30119,13 +30357,15 @@ export type operations = {
   'users___search-by-username-and-host': {
     requestBody: {
       content: {
-        'application/json': {
+        'application/json': (({
+          username: string | null;
+        }) | ({
+          host: string | null;
+        })) & {
           /** @default 10 */
           limit?: number;
           /** @default true */
           detail?: boolean;
-          username?: string | null;
-          host?: string | null;
         };
       };
     };
@@ -30177,14 +30417,17 @@ export type operations = {
   users___show: {
     requestBody: {
       content: {
-        'application/json': {
+        'application/json': ({
           /** Format: misskey:id */
-          userId?: string;
-          userIds?: string[];
-          username?: string;
+          userId: string;
+        } | {
+          userIds: string[];
+        } | {
+          username: string;
+        }) & ({
           /** @description The local host is represented with `null`. */
           host?: string | null;
-        };
+        });
       };
     };
     responses: {
