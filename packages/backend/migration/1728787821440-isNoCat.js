@@ -8,11 +8,11 @@ export class isNoCat1728787821440 {
 
 	async up(queryRunner) {
 		await queryRunner.query(`ALTER TABLE "user" ADD "isNoCat" boolean NOT NULL DEFAULT false`);
-		await queryRunner.query(`COMMENT ON COLUMN "user"."isNoCat" IS 'Whether the User is a sheep.'`);
+		await queryRunner.query(`COMMENT ON COLUMN "user"."isNoCat" IS 'Whether the User is not a sheep.'`);
 }
 
 async down(queryRunner) {
-		await queryRunner.query(`COMMENT ON COLUMN "user"."isNoCat" IS 'Whether the User is a sheep.'`);
+		await queryRunner.query(`COMMENT ON COLUMN "user"."isNoCat" IS 'Whether the User is not a sheep.'`);
 		await queryRunner.query(`ALTER TABLE "user" DROP COLUMN "isNoCat"`);
 }
 }
