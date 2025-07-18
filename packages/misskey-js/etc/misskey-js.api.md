@@ -1230,6 +1230,12 @@ export function dlsize(text: string): string;
 type DriveFile = components['schemas']['DriveFile'];
 
 // @public (undocumented)
+type DriveFilesAttachedChatMessagesRequest = operations['drive___files___attached-chat-messages']['requestBody']['content']['application/json'];
+
+// @public (undocumented)
+type DriveFilesAttachedChatMessagesResponse = operations['drive___files___attached-chat-messages']['responses']['200']['content']['application/json'];
+
+// @public (undocumented)
 type DriveFilesAttachedNotesRequest = operations['drive___files___attached-notes']['requestBody']['content']['application/json'];
 
 // @public (undocumented)
@@ -1743,6 +1749,8 @@ declare namespace entities {
         DriveResponse,
         DriveFilesRequest,
         DriveFilesResponse,
+        DriveFilesAttachedChatMessagesRequest,
+        DriveFilesAttachedChatMessagesResponse,
         DriveFilesAttachedNotesRequest,
         DriveFilesAttachedNotesResponse,
         DriveFilesCheckExistenceRequest,
