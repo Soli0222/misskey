@@ -70,7 +70,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<Mfm
 							v-if="appearNote.text"
 							:parsedNodes="parsed"
-							:text="appearNote.text"
+							:text="appearNote.text ?? ''"
 							:author="appearNote.user"
 							:nyaize="'respect'"
 							:nonyaize="'respect'"
@@ -88,8 +88,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 								<Mfm :text="translation.text" :author="appearNote.user" :nyaize="'respect'" :nonyaize="'respect'" :myaize="'respect'" :dlsize="'respect'" :emojiUrls="appearNote.emojis" class="_selectable"/>
 							</div>
 						</div>
-						<div v-if="denyaize" :class="$style.translation">
-							<Mfm :text="appearNote.text" :author="appearNote.user" :emojiUrls="appearNote.emojis"/>
+						<div v-if="denyaize && appearNote.text" :class="$style.translation">
+							<Mfm :text="appearNote.text ?? ''" :author="appearNote.user" :emojiUrls="appearNote.emojis"/>
 						</div>
 					</div>
 					<div v-if="appearNote.files && appearNote.files.length > 0" style="margin-top: 8px;">

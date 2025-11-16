@@ -41,10 +41,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<div class="_woodenFrameInner">
 						<div class="_gaps_s" style="padding: 16px;">
 							<div><b>{{ gameMode.toUpperCase() }} {{ i18n.ts.ranking }}</b></div>
-							<MkTab v-model="tab" style="margin-bottom: var(--margin);">
-								<option value="weekly">{{ i18n.tsx.lastNDays({ n: 7 }) }}</option>
-								<option value="alldays">{{ i18n.ts.allDays }}</option>
-							</MkTab>
+							<MkTab
+								v-model="tab"
+								:tabs="rankingTabs"
+								style="margin-bottom: var(--margin);"
+							/>
 							<div v-if="ranking" class="_gaps_s">
 								<div v-for="r in ranking" :key="r.id" :class="$style.rankingRecord">
 									<MkAvatar v-if="r.user" :link="true" style="width: 24px; height: 24px; margin-right: 4px;" :user="r.user"/>
@@ -88,6 +89,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { computed, ref, watch } from 'vue';
 import * as Misskey from 'misskey-js';
 import XGame from './drop-and-fusion.game.vue';
+import type { Tab } from '@/components/MkTab.vue';
 import { definePage } from '@/page.js';
 import MkButton from '@/components/MkButton.vue';
 import { i18n } from '@/i18n.js';
@@ -114,9 +116,15 @@ const gameStarted = ref(false);
 const mute = ref(false);
 const ranking = ref<Misskey.entities.BubbleGameRankingResponse | null>(null);
 const tab = ref<'weekly' | 'alldays'>('weekly');
+const rankingTabs = computed<Tab<'weekly' | 'alldays'>[]>(() => [
+	{ key: 'weekly', label: i18n.tsx.lastNDays({ n: 7 }) },
+	{ key: 'alldays', label: i18n.ts.allDays },
+]);
 
 watch([gameMode, tab], async () => {
-	let requestData = { gameMode: gameMode.value };
+	const requestData: { gameMode: typeof gameMode.value; alldata?: boolean } = {
+		gameMode: gameMode.value,
+	};
 
 	if (tab.value === 'alldays') {
 		requestData.alldata = true;
@@ -125,12 +133,12 @@ watch([gameMode, tab], async () => {
 	ranking.value = await misskeyApiGet('bubble-game/ranking', requestData);
 }, { immediate: true });
 
-function getScoreUnit(gameMode: string) {
-	return gameMode === 'normal' ? 'pt' :
-		gameMode === 'square' ? 'pt' :
-		gameMode === 'yen' ? '円' :
-		gameMode === 'sweets' ? 'kcal' :
-		gameMode === 'space' ? 'pt' :
+function getScoreUnit(mode: string) {
+	return mode === 'normal' ? 'pt' :
+		mode === 'square' ? 'pt' :
+		mode === 'yen' ? '円' :
+		mode === 'sweets' ? 'kcal' :
+		mode === 'space' ? 'pt' :
 		'' as never;
 }
 
