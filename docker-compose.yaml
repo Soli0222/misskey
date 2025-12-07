@@ -1,0 +1,103 @@
+services:
+  web:
+    image: ghcr.io/soli0222/misskey:2025.12.0-psr.9.8
+    restart: always
+    links:
+      - db
+      - valkey
+#     - mcaptcha
+#     - meilisearch
+    depends_on:
+      db:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    networks:
+      - internal_network
+      - external_network
+    # env_file:
+    #   - .config/docker.env
+    volumes:
+      - ./files:/misskey/files
+      - ./.config:/misskey/.config:ro
+
+  valkey:
+    restart: always
+    image: valkey/valkey:9.0.0-alpine3.22
+    networks:
+      - internal_network
+    volumes:
+      - valkey:/data
+    healthcheck:
+      test: "valkey-cli ping"
+      interval: 5s
+      retries: 20
+
+  db:
+    restart: always
+    image: groonga/pgroonga:4.0.4-alpine-18
+    networks:
+      - internal_network
+    env_file:
+      - .config/docker.env
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"
+      interval: 5s
+      retries: 20
+
+#  mcaptcha:
+#    restart: always
+#    image: mcaptcha/mcaptcha:latest
+#    networks:
+#      internal_network:
+#      external_network:
+#        aliases:
+#          - localhost
+#    ports:
+#      - 7493:7493
+#    env_file:
+#      - .config/docker.env
+#    environment:
+#      PORT: 7493
+#      MCAPTCHA_valkey_URL: "valkey://mcaptcha_valkey/"
+#    depends_on:
+#      db:
+#        condition: service_healthy
+#      mcaptcha_valkey:
+#        condition: service_healthy
+#
+#  mcaptcha_valkey:
+#    image: mcaptcha/cache:latest
+#    networks:
+#      - internal_network
+#    healthcheck:
+#      test: "valkey-cli ping"
+#      interval: 5s
+#      retries: 20
+
+#  meilisearch:
+#    restart: always
+#    image: getmeili/meilisearch:v1.3.4
+#    environment:
+#      - MEILI_NO_ANALYTICS=true
+#      - MEILI_ENV=production
+#    env_file:
+#      - .config/meilisearch.env
+#    networks:
+#      - internal_network
+#    volumes:
+#      - meili_data:/meili_data
+
+networks:
+  internal_network:
+    internal: true
+  external_network:
+
+volumes:
+  db:
+  valkey:
+  # meili_data:
