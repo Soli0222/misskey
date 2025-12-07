@@ -60,7 +60,7 @@ const REPEATABLE_SYSTEM_JOB_DEF = [{
 	pattern: '55 * * * *',
 }, {
 	name: 'resyncCharts',
-	pattern: '0 0 * * *',
+	pattern: '0 3 * * *',
 }, {
 	name: 'cleanCharts',
 	pattern: '0 0 * * *',
