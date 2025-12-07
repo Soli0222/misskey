@@ -60,7 +60,7 @@ const REPEATABLE_SYSTEM_JOB_DEF = [{
 	pattern: '55 * * * *',
 }, {
 	name: 'resyncCharts',
-	pattern: '0 0 * * *',
+	pattern: '0 3 * * *',
 }, {
 	name: 'cleanCharts',
 	pattern: '0 0 * * *',
@@ -83,7 +83,7 @@ const REPEATABLE_SYSTEM_JOB_DEF = [{
 }, {
 	name: 'cleanRemoteNotes',
 	// 毎日午前4時に起動(最も人の少ない時間帯)
-	pattern: '0 4 * * *',
+	pattern: '15 4 * * *',
 }];
 
 @Injectable()
