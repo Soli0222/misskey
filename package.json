@@ -1,6 +1,6 @@
 {
 	"name": "misskey",
-	"version": "2025.12.1-alpha.0-psr.9.8",
+	"version": "2025.12.1-alpha.0-psr.9.9",
 	"codename": "nasubi",
 	"repository": {
 		"type": "git",
