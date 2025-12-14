@@ -1,16 +1,16 @@
 services:
   web:
-    build: .
+    image: ghcr.io/soli0222/misskey:2025.12.0-psr.9.8
     restart: always
     links:
       - db
-      - redis
+      - valkey
 #     - mcaptcha
 #     - meilisearch
     depends_on:
       db:
         condition: service_healthy
-      redis:
+      valkey:
         condition: service_healthy
     ports:
       - "3000:3000"
@@ -23,27 +23,27 @@ services:
       - ./files:/misskey/files
       - ./.config:/misskey/.config:ro
 
-  redis:
+  valkey:
     restart: always
-    image: redis:7-alpine
+    image: valkey/valkey:9.0.0-alpine3.22
     networks:
       - internal_network
     volumes:
-      - ./redis:/data
+      - valkey:/data
     healthcheck:
-      test: "redis-cli ping"
+      test: "valkey-cli ping"
       interval: 5s
       retries: 20
 
   db:
     restart: always
-    image: postgres:18-alpine
+    image: groonga/pgroonga:4.0.4-alpine-18
     networks:
       - internal_network
     env_file:
       - .config/docker.env
     volumes:
-      - ./db:/var/lib/postgresql
+      - db:/var/lib/postgresql/data
     healthcheck:
       test: "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"
       interval: 5s
@@ -63,19 +63,19 @@ services:
 #      - .config/docker.env
 #    environment:
 #      PORT: 7493
-#      MCAPTCHA_redis_URL: "redis://mcaptcha_redis/"
+#      MCAPTCHA_valkey_URL: "valkey://mcaptcha_valkey/"
 #    depends_on:
 #      db:
 #        condition: service_healthy
-#      mcaptcha_redis:
+#      mcaptcha_valkey:
 #        condition: service_healthy
 #
-#  mcaptcha_redis:
+#  mcaptcha_valkey:
 #    image: mcaptcha/cache:latest
 #    networks:
 #      - internal_network
 #    healthcheck:
-#      test: "redis-cli ping"
+#      test: "valkey-cli ping"
 #      interval: 5s
 #      retries: 20
 
@@ -90,9 +90,14 @@ services:
 #    networks:
 #      - internal_network
 #    volumes:
-#      - ./meili_data:/meili_data
+#      - meili_data:/meili_data
 
 networks:
   internal_network:
     internal: true
   external_network:
+
+volumes:
+  db:
+  valkey:
+  # meili_data:

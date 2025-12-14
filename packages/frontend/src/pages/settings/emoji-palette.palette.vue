@@ -46,7 +46,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { defineAsyncComponent, ref, watch } from 'vue';
 import Sortable from 'vuedraggable';
 import MkButton from '@/components/MkButton.vue';
 import * as os from '@/os.js';
@@ -56,6 +56,7 @@ import MkCustomEmoji from '@/components/global/MkCustomEmoji.vue';
 import MkEmoji from '@/components/global/MkEmoji.vue';
 import MkFolder from '@/components/MkFolder.vue';
 import { copyToClipboard } from '@/utility/copy-to-clipboard.js';
+import { popup } from '@/os.js';
 
 const props = defineProps<{
 	palette: {
@@ -87,13 +88,16 @@ function remove(reaction: string, ev: MouseEvent) {
 }
 
 function pick(ev: MouseEvent) {
-	os.pickEmoji(getHTMLElement(ev), {
+	popup(defineAsyncComponent(() => import('@/components/MkEmojiPickerDialog.vue')), {
+		anchorElement: getHTMLElement(ev),
 		showPinned: false,
-	}).then(it => {
-		const emoji = it;
-		if (!emojis.value.includes(emoji)) {
-			emojis.value.push(emoji);
-		}
+		choseAndClose: false,
+	}, {
+		done: (emoji) => {
+			if (!emojis.value.includes(emoji)) {
+				emojis.value.push(emoji);
+			}
+		},
 	});
 }
 
