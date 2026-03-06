@@ -367,7 +367,7 @@ const pleaseLoginContext = computed<OpenOnRemoteOptions>(() => ({
 const favorited = ref(false);
 const denyaize = ref(false);
 
-async function checkFav(check_note): Promise<boolean> {
+async function checkFav(check_note: Misskey.entities.Note): Promise<boolean> {
 	const result = await misskeyApi('notes/state', {
 		noteId: check_note.id,
 	});

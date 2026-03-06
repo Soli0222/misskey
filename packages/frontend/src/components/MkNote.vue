@@ -378,7 +378,7 @@ function checkMute(noteToCheck: Misskey.entities.Note, mutedWords: Array<string 
 }
 /* eslint-enable no-redeclare */
 
-async function checkFav(note): Promise<boolean> {
+async function checkFav(note: Misskey.entities.Note): Promise<boolean> {
 	const result = await misskeyApi('notes/state', {
 		noteId: note.id,
 	});
