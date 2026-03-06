@@ -605,13 +605,20 @@ export async function selectRole(params: ComponentProps<typeof MkRoleSelectDialo
 	});
 }
 
-export async function pickEmoji(anchorElement: HTMLElement, opts: ComponentProps<typeof MkEmojiPickerDialog_TypeReferenceOnly>): Promise<string> {
+export async function pickEmoji(
+	anchorElement: HTMLElement,
+	opts: ComponentProps<typeof MkEmojiPickerDialog_TypeReferenceOnly>,
+	handlers?: {
+		onDone?: (emoji: string) => void;
+	},
+): Promise<string> {
 	return new Promise(resolve => {
 		const { dispose } = popup(defineAsyncComponent(() => import('@/components/MkEmojiPickerDialog.vue')), {
 			anchorElement,
 			...opts,
 		}, {
 			done: emoji => {
+				handlers?.onDone?.(emoji);
 				resolve(emoji);
 			},
 			closed: () => dispose(),

@@ -86,13 +86,15 @@ function remove(reaction: string, ev: PointerEvent) {
 }
 
 function pick(ev: PointerEvent) {
-	os.pickEmoji(getHTMLElement(ev), {
+	void os.pickEmoji(getHTMLElement(ev), {
 		showPinned: false,
 		choseAndClose: false,
-	}).then(emoji => {
-		if (!emojis.value.includes(emoji)) {
-			emojis.value.push(emoji);
-		}
+	}, {
+		onDone: emoji => {
+			if (!emojis.value.includes(emoji)) {
+				emojis.value.push(emoji);
+			}
+		},
 	});
 }
 
