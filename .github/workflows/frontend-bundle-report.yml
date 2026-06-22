@@ -60,7 +60,13 @@ jobs:
         shell: bash
         run: |
           if ! grep -q 'FRONTEND_BUNDLE_VISUALIZER' before/packages/frontend/vite.config.ts; then
-            cp after/packages/frontend/package.json before/packages/frontend/package.json
+            cp after/package.json before/package.json
+            cp after/pnpm-workspace.yaml before/pnpm-workspace.yaml
+            find after/packages -name package.json -print | while IFS= read -r manifest; do
+              target="before/${manifest#after/}"
+              mkdir -p "$(dirname "$target")"
+              cp "$manifest" "$target"
+            done
             cp after/packages/frontend/vite.config.ts before/packages/frontend/vite.config.ts
             cp after/pnpm-lock.yaml before/pnpm-lock.yaml
           fi
