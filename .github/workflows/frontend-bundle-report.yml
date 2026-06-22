@@ -60,11 +60,9 @@ jobs:
         shell: bash
         run: |
           if ! grep -q 'FRONTEND_BUNDLE_VISUALIZER' before/packages/frontend/vite.config.ts; then
-            cp after/pnpm-workspace.yaml before/pnpm-workspace.yaml
             cp after/packages/frontend/package.json before/packages/frontend/package.json
             cp after/packages/frontend/vite.config.ts before/packages/frontend/vite.config.ts
             cp after/pnpm-lock.yaml before/pnpm-lock.yaml
-            touch before/.frontend-bundle-report-backported
           fi
 
       - name: Setup pnpm
@@ -83,12 +81,7 @@ jobs:
 
       - name: Install dependencies for base
         working-directory: before
-        run: |
-          if [ -f .frontend-bundle-report-backported ]; then
-            pnpm i --no-frozen-lockfile
-          else
-            pnpm i --frozen-lockfile
-          fi
+        run: pnpm i --frozen-lockfile
 
       - name: Build frontend dependencies for base
         working-directory: before
