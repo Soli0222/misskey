@@ -1,6 +1,6 @@
 services:
   web:
-    image: ghcr.io/soli0222/misskey:2025.12.0-psr.9.8
+    image: ghcr.io/soli0222/misskey:2026.6.0-psr.9.10
     restart: always
     links:
       - db
@@ -17,8 +17,6 @@ services:
     networks:
       - internal_network
       - external_network
-    # env_file:
-    #   - .config/docker.env
     volumes:
       - ./files:/misskey/files
       - ./.config:/misskey/.config:ro
@@ -43,7 +41,7 @@ services:
     env_file:
       - .config/docker.env
     volumes:
-      - db:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"
       interval: 5s
@@ -98,6 +96,6 @@ networks:
   external_network:
 
 volumes:
-  db:
   valkey:
+  pgdata:
   # meili_data:

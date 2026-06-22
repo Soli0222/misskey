@@ -750,6 +750,7 @@ function clear() {
 	poll.value = null;
 	quoteId.value = null;
 	scheduledAt.value = null;
+	uploader.reset();
 }
 
 function onKeydown(ev: KeyboardEvent) {
