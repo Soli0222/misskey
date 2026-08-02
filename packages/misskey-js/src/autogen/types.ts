@@ -4044,10 +4044,10 @@ export type components = {
             }[];
             isBot?: boolean;
             isCat?: boolean;
-      			isNoCat?: boolean;
-      isSheep?: boolean;
-      isDsite?: boolean;
-      requireSigninToViewContents?: boolean;
+            isNoCat?: boolean;
+            isSheep?: boolean;
+            isDsite?: boolean;
+            requireSigninToViewContents?: boolean;
             makeNotesFollowersOnlyBefore?: number | null;
             makeNotesHiddenBefore?: number | null;
             instance?: {
@@ -14695,6 +14695,8 @@ export interface operations {
             content: {
                 'application/json': {
                     gameMode: string;
+                    /** @default false */
+                    alldata?: boolean;
                 };
             };
         };
@@ -27891,10 +27893,10 @@ export interface operations {
                     makeNotesHiddenBefore?: number | null;
                     isBot?: boolean;
                     isCat?: boolean;
-          					isNoCat?: boolean;
-          isSheep?: boolean;
-          isDsite?: boolean;
-          injectFeaturedNote?: boolean;
+                    isNoCat?: boolean;
+                    isSheep?: boolean;
+                    isDsite?: boolean;
+                    injectFeaturedNote?: boolean;
                     receiveAnnouncementEmail?: boolean;
                     alwaysMarkNsfw?: boolean;
                     autoSensitive?: boolean;
