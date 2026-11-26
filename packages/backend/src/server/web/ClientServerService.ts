@@ -10,7 +10,6 @@ import ms from 'ms';
 import sharp from 'sharp';
 import { In, IsNull } from 'typeorm';
 import fastifyStatic from '@fastify/static';
-import fastifyProxy from '@fastify/http-proxy';
 import vary from 'vary';
 import type { Config } from '@/config.js';
 import { DI } from '@/di-symbols.js';
@@ -235,7 +234,9 @@ export class ClientServerService {
 				done();
 			});
 		} else {
-			console.log('[ClientServerService] Proxying to Vite dev server.');
+			this.clientLoggerService.logger.info('[ClientServerService] Proxying to Vite dev server.');
+			const fastifyProxy = import('@fastify/http-proxy');
+
 			const urlOriginWithoutPort = configUrl.origin.replace(/:\d+$/, '');
 
 			const port = (process.env.VITE_PORT ?? '5173');
@@ -856,6 +857,7 @@ export class ClientServerService {
 
 			const clip = await this.clipsRepository.findOneBy({
 				id: request.params.clip,
+				isPublic: true,
 			});
 
 			if (clip == null) return;
@@ -909,13 +911,28 @@ export class ClientServerService {
 			let sendHeader = true;
 
 			if (request.headers['origin']) {
-				const originURL = new URL(request.headers['origin']);
-				if (originURL.protocol !== 'https:') { // Clear-Site-Data only supports https
+				try {
+					const originURL = new URL(request.headers['origin']);
+					if (originURL.protocol !== 'https:') { // Clear-Site-Data only supports https
+						sendHeader = false;
+					}
+					if (originURL.host !== configUrl.host) {
+						sendHeader = false;
+					}
+				} catch {
+					// `Origin: null` など
 					sendHeader = false;
 				}
-				if (originURL.host !== configUrl.host) {
-					sendHeader = false;
-				}
+			}
+
+			// このページがサブリソースとして（fetchなど経由で）読み込まれた場合には送出しない
+			const secFetchDest = request.headers['sec-fetch-dest'];
+			if (secFetchDest != null && secFetchDest !== 'document') {
+				sendHeader = false;
+			}
+			const secFetchMode = request.headers['sec-fetch-mode'];
+			if (secFetchMode != null && secFetchMode !== 'navigate') {
+				sendHeader = false;
 			}
 
 			if (sendHeader) {
